@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101114">
-  <title>MiTube</title>
+  <title>MiTube Sin Anuncios</title>
 
   <style>
     :root {
@@ -304,7 +304,10 @@
           Selecciona una canción para reproducirla.
         </div>
 
-        <div id="youtube-player"></div>
+        <!-- Contenedor del reproductor sin anuncios (Invidious / Piped embed) -->
+        <div id="youtube-player">
+          <iframe id="adfree-iframe" src="" allowfullscreen></iframe>
+        </div>
 
         <div class="hero-actions">
           <button class="button" id="featured-play">
@@ -329,7 +332,7 @@
       <div id="status" role="status">Cargando canciones...</div>
       <div id="songs"></div>
 
-      <footer>MiTube · Reproducción aleatoria automática.</footer>
+      <footer>MiTube · Reproducción sin anuncios.</footer>
     </main>
   </div>
 
@@ -341,11 +344,8 @@
     let items = [];
     let displayedItems = [];
     let currentItem = null;
-    let lastPlayedId = null; // Control estricto para evitar bucles en la misma pista
-    let player = null;
-    let playerReady = false;
+    let lastPlayedId = null;
     let initialPlaybackStarted = false;
-    let pendingItem = null;
 
     function setStatus(message) {
       $("status").textContent = message;
@@ -361,23 +361,18 @@
 
       lastPlayedId = currentItem ? currentItem.id : null;
       currentItem = item;
-      pendingItem = item;
       updateFeatured(item);
 
-      if (!playerReady || !player) {
-        setStatus("Preparando el reproductor...");
-        return;
-      }
-
-      pendingItem = null;
-      player.loadVideoById(String(item.id));
-      setStatus("Reproduciendo: " + item.title);
+      const iframe = $("adfree-iframe");
+      // Usamos una instancia limpia de Invidious embed para evitar la publicidad de YouTube
+      iframe.src = `https://yewtu.be/embed/${encodeURIComponent(item.id)}?autoplay=1&loop=0`;
+      
+      setStatus("Reproduciendo (Sin Anuncios): " + item.title);
     }
 
     function chooseRandomSong() {
       if (!items.length) return null;
 
-      // Excluye estrictamente tanto la canción actual como la recién reproducida
       const alternatives = items.filter(
         item => String(item.id) !== String(currentItem?.id) && String(item.id) !== String(lastPlayedId)
       );
@@ -397,49 +392,6 @@
 
       playSong(nextItem);
     }
-
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player("youtube-player", {
-        width: "100%",
-        height: "100%",
-        videoId: "",
-        playerVars: {
-          autoplay: 1,
-          controls: 1,
-          rel: 0,
-          playsinline: 1
-        },
-        events: {
-          onReady: function () {
-            playerReady = true;
-
-            if (pendingItem) {
-              const item = pendingItem;
-              pendingItem = null;
-              playSong(item);
-            } else if (items.length && !initialPlaybackStarted) {
-              initialPlaybackStarted = true;
-              playSong(items[0]);
-            }
-          },
-
-          onStateChange: function (event) {
-            // Cuando termina el vídeo actual, salta automáticamente al siguiente al azar
-            if (event.data === YT.PlayerState.ENDED) {
-              playRandom();
-            }
-          },
-
-          onError: function (event) {
-            console.error("Error del reproductor de YouTube:", event.data);
-            setStatus("No se puede reproducir este vídeo. Saltando al siguiente...");
-            playRandom();
-          }
-        }
-      });
-    }
-
-    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 
     function renderSongs() {
       const query = $("search").value.trim().toLocaleLowerCase("es");
@@ -583,11 +535,6 @@
     });
 
     loadPlaylist();
-
-    const youtubeScript = document.createElement("script");
-    youtubeScript.src = "https://www.youtube.com/iframe_api";
-    youtubeScript.async = true;
-    document.head.appendChild(youtubeScript);
   </script>
 </body>
 </html>
