@@ -2,47 +2,41 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Playlist Player</title>
+    <title>Mi Playlist MIB3</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-        body {
-            background-color: #0b0b0b;
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 10px;
-        }
-        .player-container {
-            width: 100%;
-            max-width: 800px;
-            aspect-ratio: 16 / 9;
-            background-color: #000;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-        }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+        body { background: #000; color: #fff; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        #player { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
+    <div id="player"></div>
 
-    <div class="player-container">
-        <!-- Reproductor incrustado cargando directamente la playlist limpia sin anuncios -->
-        <iframe src="https://yewtu.be/playlist?list=PLPBl-I93G56Y&autoplay=1" allowfullscreen></iframe>
-    </div>
+    <script>
+        // Carga la API oficial de YouTube de forma limpia
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '100%',
+                width: '100%',
+                playerVars: {
+                    'listType': 'playlist',
+                    'list': 'PLPBl-I93G56Y',
+                    'autoplay': 1,
+                    'controls': 1,
+                    'modestbranding': 1
+                },
+                events: {
+                    'onReady': function(event) {
+                        event.target.playVideo();
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>
