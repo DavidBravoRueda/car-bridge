@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101114">
-  <title>MiTube Sin Anuncios</title>
+  <title>MiTubetube</title>
 
   <style>
     :root {
@@ -304,10 +304,8 @@
           Selecciona una canción para reproducirla.
         </div>
 
-        <!-- Contenedor del reproductor sin anuncios (Invidious / Piped embed) -->
-        <div id="youtube-player">
-          <iframe id="adfree-iframe" src="" allowfullscreen></iframe>
-        </div>
+        <!-- Reproductor original de YouTube Iframe API -->
+        <div id="youtube-player"></div>
 
         <div class="hero-actions">
           <button class="button" id="featured-play">
@@ -332,7 +330,7 @@
       <div id="status" role="status">Cargando canciones...</div>
       <div id="songs"></div>
 
-      <footer>MiTube · Reproducción sin anuncios.</footer>
+      <footer>MiTube · Reproducción aleatoria automática.</footer>
     </main>
   </div>
 
@@ -344,8 +342,11 @@
     let items = [];
     let displayedItems = [];
     let currentItem = null;
-    let lastPlayedId = null;
+    let lastPlayedId = null; // Control estricto antirrepetición
+    let player = null;
+    let playerReady = false;
     let initialPlaybackStarted = false;
+    let pendingItem = null;
 
     function setStatus(message) {
       $("status").textContent = message;
@@ -356,18 +357,37 @@
       $("featured-by").textContent = item.by || "";
     }
 
+    // Función para limpiar/convertir el ID o la URL aplicando la sustitución de yout-ube si procede
+    function getCleanVideoId(item) {
+      let rawId = String(item.id || item.url || "");
+      // Si viene una URL completa de YouTube, extraemos el ID o aplicamos el reemplazo
+      if (rawId.includes("youtube.com") || rawId.includes("youtu.be")) {
+        rawId = rawId.replace("youtube.com", "yout-ube.com");
+      }
+      return rawId;
+    }
+
     function playSong(item) {
-      if (!item || !item.id) return;
+      if (!item) return;
 
       lastPlayedId = currentItem ? currentItem.id : null;
       currentItem = item;
+      pendingItem = item;
       updateFeatured(item);
 
-      const iframe = $("adfree-iframe");
-      // Usamos una instancia limpia de Invidious embed para evitar la publicidad de YouTube
-      iframe.src = `https://yewtu.be/embed/${encodeURIComponent(item.id)}?autoplay=1&loop=0`;
+      if (!playerReady || !player) {
+        setStatus("Preparando el reproductor...");
+        return;
+      }
+
+      pendingItem = null;
       
-      setStatus("Reproduciendo (Sin Anuncios): " + item.title);
+      // Obtenemos el ID procesado aplicando el truco de yout-ube si viene en formato enlace
+      const videoIdOrUrl = getCleanVideoId(item);
+      
+      // Si es un ID plano de YouTube, lo carga directamente; si se adaptó, la API lo gestiona
+      player.loadVideoById(videoIdOrUrl);
+      setStatus("Reproduciendo: " + item.title);
     }
 
     function chooseRandomSong() {
@@ -392,6 +412,49 @@
 
       playSong(nextItem);
     }
+
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player("youtube-player", {
+        width: "100%",
+        height: "100%",
+        videoId: "",
+        playerVars: {
+          autoplay: 1,
+          controls: 1,
+          rel: 0,
+          playsinline: 1
+        },
+        events: {
+          onReady: function () {
+            playerReady = true;
+
+            if (pendingItem) {
+              const item = pendingItem;
+              pendingItem = null;
+              playSong(item);
+            } else if (items.length && !initialPlaybackStarted) {
+              initialPlaybackStarted = true;
+              playSong(items[0]);
+            }
+          },
+
+          onStateChange: function (event) {
+            // Cuando termina la canción (ENDED = 0), pasa automáticamente a la siguiente aleatoria sin bucle
+            if (event.data === YT.PlayerState.ENDED) {
+              playRandom();
+            }
+          },
+
+          onError: function (event) {
+            console.error("Error del reproductor de YouTube:", event.data);
+            setStatus("No se puede reproducir este vídeo. Saltando al siguiente...");
+            playRandom();
+          }
+        }
+      });
+    }
+
+    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 
     function renderSongs() {
       const query = $("search").value.trim().toLocaleLowerCase("es");
@@ -535,6 +598,11 @@
     });
 
     loadPlaylist();
+
+    const youtubeScript = document.createElement("script");
+    youtubeScript.src = "https://www.youtube.com/iframe_api";
+    youtubeScript.async = true;
+    document.head.appendChild(youtubeScript);
   </script>
 </body>
 </html>
