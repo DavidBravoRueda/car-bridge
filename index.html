@@ -1,101 +1,122 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Player Sin Anuncios</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-
-        body {
-            background-color: #050505;
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .header h1 {
-            font-size: 26px;
-            font-weight: 800;
-            color: #00ff66;
-            letter-spacing: 1px;
-            text-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
-        }
-
-        .header p {
-            font-size: 13px;
-            color: #aaaaaa;
-            margin-top: 6px;
-        }
-
-        .grid-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            max-width: 420px;
-        }
-
-        .btn-play {
-            background: #121212;
-            border: 2px solid #00ff66;
-            border-radius: 14px;
-            padding: 20px 24px;
-            color: #ffffff;
-            font-size: 18px;
-            font-weight: 700;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.7);
-        }
-
-        .btn-play:active {
-            background: #00ff66;
-            color: #000000;
-            transform: scale(0.97);
-        }
-
-        .icon {
-            font-size: 24px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi lista en aleatorio</title>
+<style>
+:root{--bg:#f4f1ec;--surface:#fff;--ink:#1b1b1f;--muted:#5d5d66;--line:#cfcac1;--accent:#c2410c;--accent-ink:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101216;--surface:#1a1d23;--ink:#f1efe9;--muted:#a3a7b0;--line:#323641;--accent:#f59e0b;--accent-ink:#1b1100}}
+:root[data-theme="dark"]{--bg:#101216;--surface:#1a1d23;--ink:#f1efe9;--muted:#a3a7b0;--line:#323641;--accent:#f59e0b;--accent-ink:#1b1100}
+html{color-scheme:light dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:20px;display:flex;justify-content:center}
+main{width:100%;max-width:720px}
+h1{font-size:26px;margin:6px 0 16px;font-weight:800}
+label{display:block;font-weight:600;margin-bottom:6px}
+input{width:100%;font:inherit;padding:14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+button{font:inherit;font-weight:700;border:0;border-radius:14px;cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#start{width:100%;margin-top:14px;padding:20px;background:var(--accent);color:var(--accent-ink);font-size:19px}
+details{margin-top:12px}
+summary{cursor:pointer;color:var(--muted)}
+details input{margin-top:8px}
+#msg{min-height:24px;margin:12px 0;font-size:15px;color:var(--muted)}
+video{width:100%;max-height:60vh;background:#000;border-radius:14px}
+#title{margin:10px 0;font-weight:600}
+.ctrl{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ctrl button{padding:18px;background:var(--surface);color:var(--ink);border:1.5px solid var(--line)}
+.ctrl #next{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.ctrl #shuf{grid-column:1/-1}
+</style>
 </head>
 <body>
-
-    <div class="header">
-        <h1>CAR PLAYER PRO</h1>
-        <p>Videoclips directos sin publicidad</p>
+<main>
+  <h1>Mi lista en aleatorio</h1>
+  <label for="pl">Enlace de tu lista de YouTube</label>
+  <input id="pl" type="text" inputmode="url" autocomplete="off" placeholder="https://www.youtube.com/playlist?list=…">
+  <details>
+    <summary>Servidor</summary>
+    <input id="api" type="text" autocomplete="off" aria-label="Dirección de la API de Piped">
+  </details>
+  <button id="start" type="button">Reproducir en aleatorio</button>
+  <div id="msg" role="status"></div>
+  <section id="player" hidden>
+    <video id="v" controls playsinline autoplay></video>
+    <div id="title"></div>
+    <div class="ctrl">
+      <button id="prev" type="button">Anterior</button>
+      <button id="next" type="button">Siguiente</button>
+      <button id="shuf" type="button">Mezclar de nuevo</button>
     </div>
-
-    <div class="grid-container">
-        <!-- Servidor Principal (Invidious - Sin publicidad) -->
-        <a class="btn-play" href="https://yewtu.be/playlist?list=PLPBl-I93G56Y">
-            <span>▶ LISTA SIN ANUNCIOS</span>
-            <span class="icon">⚡</span>
-        </a>
-
-        <!-- Servidor Secundario de respaldo por si el primero se satura -->
-        <a class="btn-play" href="https://piped.video/playlist?list=PLPBl-I93G56Y" style="border-color: #ff3333;">
-            <span>🔄 OPCIÓN B (PIPED)</span>
-            <span class="icon">🚀</span>
-        </a>
-    </div>
-
+  </section>
+</main>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)},v=$("v");
+function ld(k){try{return localStorage.getItem("rp:"+k)}catch(e){return null}}
+function sv(k,x){try{localStorage.setItem("rp:"+k,x)}catch(e){}}
+$("pl").value=ld("pl")||"";
+$("api").value=ld("api")||"https://pipedapi.kavin.rocks";
+var queue=[],pos=0,fails=0;
+function say(t){$("msg").textContent=t}
+function api(){return $("api").value.trim().replace(/\/+$/,"")}
+function parseId(s){s=(s||"").trim();var m=s.match(/[?&]list=([A-Za-z0-9_-]+)/);if(m)return m[1];return /^[A-Za-z0-9_-]{10,}$/.test(s)?s:""}
+function vid(u){var m=/[?&]v=([\w-]{11})/.exec(u||"");return m?m[1]:null}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+async function getJSON(u){var r=await fetch(u);if(!r.ok)throw new Error(r.status);return r.json()}
+async function loadList(id){
+  var out=[],d=await getJSON(api()+"/playlists/"+encodeURIComponent(id));
+  function add(x){(x.relatedStreams||[]).forEach(function(s){var k=vid(s.url);if(k)out.push({id:k,title:s.title||""})})}
+  add(d);var next=d.nextpage,n=0;
+  while(next&&n<40){
+    say("Cargando la lista… "+out.length+" vídeos");
+    d=await getJSON(api()+"/nextpage/playlists/"+encodeURIComponent(id)+"?nextpage="+encodeURIComponent(next));
+    add(d);next=d.nextpage;n++;
+  }
+  return out;
+}
+function pick(s){
+  var c=(s.videoStreams||[]).filter(function(x){return !x.videoOnly&&/mp4/i.test(x.mimeType||x.format||"")});
+  c.sort(function(a,b){return (b.height||parseInt(b.quality)||0)-(a.height||parseInt(a.quality)||0)});
+  return c.length?c[0].url:(s.hls||null);
+}
+function skip(){
+  fails++;
+  if(fails>=5){say("Fallan varios vídeos seguidos. Prueba otro servidor en “Servidor”.");return}
+  setTimeout(function(){play(pos+1)},600);
+}
+async function play(i){
+  if(!queue.length)return;
+  pos=(i+queue.length)%queue.length;
+  var it=queue[pos];$("title").textContent=it.title;
+  try{
+    var s=await getJSON(api()+"/streams/"+it.id),u=pick(s);
+    if(!u)throw new Error("sin vídeo");
+    $("title").textContent=s.title||it.title;
+    v.src=u;
+    await v.play().catch(function(){});
+  }catch(e){skip()}
+}
+v.addEventListener("playing",function(){fails=0;say(queue.length+" vídeos en aleatorio")});
+v.addEventListener("ended",function(){play(pos+1)});
+v.addEventListener("error",function(){if(v.getAttribute("src"))skip()});
+$("next").onclick=function(){play(pos+1)};
+$("prev").onclick=function(){play(pos-1)};
+$("shuf").onclick=function(){queue=shuffle(queue);play(0)};
+$("start").onclick=async function(){
+  var id=parseId($("pl").value);
+  if(!id){say("Pega el enlace completo de tu lista.");return}
+  sv("pl",$("pl").value);sv("api",$("api").value);
+  say("Cargando la lista…");
+  try{
+    var l=await loadList(id);
+    if(!l.length){say("La lista está vacía o es privada. Ponla pública o no listada.");return}
+    queue=shuffle(l);fails=0;$("player").hidden=false;play(0);
+  }catch(e){say("No se ha podido cargar la lista. Prueba otro servidor o revisa que la lista sea pública.")}
+};
+})();
+</script>
 </body>
 </html>
