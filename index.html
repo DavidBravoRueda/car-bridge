@@ -6,13 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101114">
   <title>MiTube</title>
-
   <style>
     :root {
       color-scheme: dark;
       --bg: #101114;
       --panel: #191a20;
-      --panel-hover: #242630;
+      --hover: #242630;
       --text: #f4f4f5;
       --muted: #a1a1aa;
       --accent: #b8f500;
@@ -72,9 +71,7 @@
     }
 
     .nav-button:hover,
-    .nav-button.active {
-      background: var(--panel-hover);
-    }
+    .nav-button.active { background: var(--hover); }
 
     main {
       min-width: 0;
@@ -112,7 +109,7 @@
 
     .button.secondary {
       color: var(--text);
-      background: var(--panel-hover);
+      background: var(--hover);
       border: 1px solid var(--border);
     }
 
@@ -185,7 +182,7 @@
       border-radius: 12px;
     }
 
-    .song:hover { background: var(--panel-hover); }
+    .song:hover { background: var(--hover); }
     .number { color: var(--muted); text-align: center; }
 
     .thumbnail {
@@ -329,13 +326,8 @@
       let originalUrl = item.url;
 
       if (!originalUrl && item.id) {
-        const params = new URLSearchParams({
-          v: item.id,
-          list: "RD" + item.id,
-          start_radio: "1"
-        });
-
-        originalUrl = "https://www.youtube.com/watch?" + params.toString();
+        originalUrl = "https://www.youtube.com/watch?v=" +
+          encodeURIComponent(item.id);
       }
 
       if (!originalUrl) {
@@ -356,7 +348,9 @@
         throw new Error("El dominio del enlace no es válido.");
       }
 
-      // Cambiar solo el dominio, sin perder los parámetros del vídeo.
+      // Abrir el vídeo individual, sin activar una radio externa.
+      url.searchParams.delete("list");
+      url.searchParams.delete("start_radio");
       url.protocol = "https:";
       url.hostname = "www.yout-ube.com";
 
@@ -369,7 +363,6 @@
         $("featured-title").textContent = item.title || "Sin título";
         $("featured-by").textContent = item.by || "";
         $("featured-image").src = item.thumb || "";
-
         $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
 
         window.location.assign(getPlaybackUrl(item));
@@ -392,7 +385,7 @@
       } else {
         do {
           nextItem = items[Math.floor(Math.random() * items.length)];
-        } while (nextItem === currentItem);
+        } while (nextItem.id === currentItem?.id);
       }
 
       playSong(nextItem);
@@ -402,11 +395,11 @@
       const query = $("search").value.trim().toLocaleLowerCase("es");
       const sort = $("sort").value;
 
-      displayedItems = items.filter(item => {
-        const text = `${item.title || ""} ${item.by || ""}`
-          .toLocaleLowerCase("es");
-        return text.includes(query);
-      });
+      displayedItems = items.filter(item =>
+        `${item.title || ""} ${item.by || ""}`
+          .toLocaleLowerCase("es")
+          .includes(query)
+      );
 
       if (sort === "title") {
         displayedItems.sort((a, b) =>
@@ -415,7 +408,8 @@
         displayedItems.sort((a, b) =>
           (a.by || "").localeCompare(b.by || "", "es"));
       } else if (sort === "duration") {
-        displayedItems.sort((a, b) => (a.dur || 0) - (b.dur || 0));
+        displayedItems.sort((a, b) =>
+          (a.dur || 0) - (b.dur || 0));
       }
 
       const container = $("songs");
@@ -447,6 +441,7 @@
           `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/mqdefault.jpg`;
 
         const info = document.createElement("div");
+
         const title = document.createElement("div");
         title.className = "song-title";
         title.textContent = item.title || "Vídeo sin título";
@@ -519,10 +514,6 @@
       }
     }
 
-    function shuffleAndPlay() {
-      playRandom();
-    }
-
     $("search").addEventListener("input", renderSongs);
     $("sort").addEventListener("change", renderSongs);
     $("reload-button").addEventListener("click", loadPlaylist);
@@ -533,8 +524,8 @@
       renderSongs();
     });
 
-    $("shuffle-button").addEventListener("click", shuffleAndPlay);
-    $("shuffle-top").addEventListener("click", shuffleAndPlay);
+    $("shuffle-button").addEventListener("click", playRandom);
+    $("shuffle-top").addEventListener("click", playRandom);
     $("next-button").addEventListener("click", playRandom);
 
     $("featured-play").addEventListener("click", () => {
