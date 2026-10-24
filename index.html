@@ -3,16 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Bridge</title>
+    <title>Car Player - Videoclips</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; background-color: #000000; overflow: hidden; }
-        iframe { width: 100%; height: 100%; border: none; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0d0d0d;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1ed760;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #888888;
+            margin-top: 5px;
+        }
+
+        .grid-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .btn-play {
+            background: #191414;
+            border: 2px solid #1ed760;
+            border-radius: 12px;
+            padding: 18px 24px;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn-play:active {
+            background: #1ed760;
+            color: #000000;
+            transform: scale(0.98);
+        }
+
+        .icon {
+            font-size: 22px;
+        }
     </style>
 </head>
 <body>
-    <!-- Forzamos la versión móvil directa de la playlist -->
-    <iframe src="https://m.youtube.com/playlist?list=PLPBl-I93G56Y" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+    <div class="header">
+        <h1>CAR PLAYER</h1>
+        <p>Selecciona una lista de videoclips</p>
+    </div>
+
+    <div class="grid-container">
+        <!-- Botón 1: Tu playlist principal de videoclips -->
+        <a class="btn-play" href="https://m.youtube.com/playlist?list=PLPBl-I93G56Y">
+            <span>▶ Reproducir Mi Lista</span>
+            <span class="icon">🎵</span>
+        </a>
+
+        <!-- Botón 2: Abrir YouTube Música / Vídeos directo -->
+        <a class="btn-play" href="https://m.youtube.com/feed/trending" style="border-color: #ff0000;">
+            <span>🔥 Videoclips Tendencias</span>
+            <span class="icon">🎬</span>
+        </a>
+    </div>
+
 </body>
 </html>
-
