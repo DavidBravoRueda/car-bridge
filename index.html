@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101114">
-  <title>MiTubetubee</title>
+  <title>MiTubeeeeeee</title>
 
   <style>
     :root {
@@ -304,7 +304,6 @@
           Selecciona una canción para reproducirla.
         </div>
 
-        <!-- Reproductor original de YouTube Iframe API -->
         <div id="youtube-player"></div>
 
         <div class="hero-actions">
@@ -342,7 +341,7 @@
     let items = [];
     let displayedItems = [];
     let currentItem = null;
-    let lastPlayedId = null; // Control estricto antirrepetición
+    let lastPlayedId = null; // Control de seguridad anti-bucle
     let player = null;
     let playerReady = false;
     let initialPlaybackStarted = false;
@@ -357,18 +356,8 @@
       $("featured-by").textContent = item.by || "";
     }
 
-    // Función para limpiar/convertir el ID o la URL aplicando la sustitución de yout-ube si procede
-    function getCleanVideoId(item) {
-      let rawId = String(item.id || item.url || "");
-      // Si viene una URL completa de YouTube, extraemos el ID o aplicamos el reemplazo
-      if (rawId.includes("youtube.com") || rawId.includes("youtu.be")) {
-        rawId = rawId.replace("youtube.com", "yout-ube.com");
-      }
-      return rawId;
-    }
-
     function playSong(item) {
-      if (!item) return;
+      if (!item || !item.id) return;
 
       lastPlayedId = currentItem ? currentItem.id : null;
       currentItem = item;
@@ -381,18 +370,14 @@
       }
 
       pendingItem = null;
-      
-      // Obtenemos el ID procesado aplicando el truco de yout-ube si viene en formato enlace
-      const videoIdOrUrl = getCleanVideoId(item);
-      
-      // Si es un ID plano de YouTube, lo carga directamente; si se adaptó, la API lo gestiona
-      player.loadVideoById(videoIdOrUrl);
+      player.loadVideoById(String(item.id));
       setStatus("Reproduciendo: " + item.title);
     }
 
     function chooseRandomSong() {
       if (!items.length) return null;
 
+      // Excluye tanto la canción actual como la recién reproducida para impedir bucles
       const alternatives = items.filter(
         item => String(item.id) !== String(currentItem?.id) && String(item.id) !== String(lastPlayedId)
       );
@@ -419,7 +404,7 @@
         height: "100%",
         videoId: "",
         playerVars: {
-          autoplay: 1,
+          autoplay: 0,
           controls: 1,
           rel: 0,
           playsinline: 1
@@ -439,7 +424,8 @@
           },
 
           onStateChange: function (event) {
-            // Cuando termina la canción (ENDED = 0), pasa automáticamente a la siguiente aleatoria sin bucle
+            // YT.PlayerState.ENDED vale 0.
+            // Al terminar, salta de inmediato a una canción diferente al azar.
             if (event.data === YT.PlayerState.ENDED) {
               playRandom();
             }
@@ -447,13 +433,15 @@
 
           onError: function (event) {
             console.error("Error del reproductor de YouTube:", event.data);
-            setStatus("No se puede reproducir este vídeo. Saltando al siguiente...");
-            playRandom();
+            setStatus(
+              "No se puede reproducir este vídeo. Prueba otra canción."
+            );
           }
         }
       });
     }
 
+    // La API busca esta función global cuando termina de cargarse.
     window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 
     function renderSongs() {
@@ -467,9 +455,13 @@
       );
 
       if (sort === "title") {
-        displayedItems.sort((a, b) => a.title.localeCompare(b.title, "es"));
+        displayedItems.sort((a, b) =>
+          a.title.localeCompare(b.title, "es")
+        );
       } else if (sort === "artist") {
-        displayedItems.sort((a, b) => a.by.localeCompare(b.by, "es"));
+        displayedItems.sort((a, b) =>
+          a.by.localeCompare(b.by, "es")
+        );
       } else if (sort === "duration") {
         displayedItems.sort((a, b) => a.dur - b.dur);
       }
@@ -574,7 +566,9 @@
         }
       } catch (error) {
         console.error("Error cargando lista.json:", error);
-        setStatus("No se pudo cargar lista.json. Comprueba que esté publicado junto a index.html.");
+        setStatus(
+          "No se pudo cargar lista.json. Comprueba que esté publicado junto a index.html."
+        );
       }
     }
 
@@ -597,6 +591,7 @@
       else if (items.length) playSong(items[0]);
     });
 
+    // Carga la lista y la API del reproductor.
     loadPlaylist();
 
     const youtubeScript = document.createElement("script");
