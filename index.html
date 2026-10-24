@@ -317,24 +317,9 @@
 
     const $ = id => document.getElementById(id);
 
-    // false = enlace simple (seguro). true = añade list=RD<id> (mix de YouTube)
-    // para que al terminar pase a otra canción. Pruébalo y, si tu lanzador
-    // muestra el aviso otra vez, déjalo en false.
-    const USE_MIX = false;
-
     let items = [];
     let displayedItems = [];
     let currentItem = null;
-
-    // Baraja una copia del array (Fisher-Yates)
-    function shuffle(array) {
-      const a = [...array];
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
-    }
 
     function getPlaybackUrl(item) {
       let originalUrl = item.url;
@@ -362,19 +347,13 @@
         throw new Error("El dominio del enlace no es válido.");
       }
 
-      // Enlace en el formato que acepta el lanzador:
-      // https://www.yout-ube.com/watch?v=ID
-      const videoId = url.searchParams.get("v") || item.id;
-      const result = new URL("https://www.yout-ube.com/watch");
-      result.searchParams.set("v", videoId);
+      // Abrir el vídeo individual, sin activar una radio externa.
+      url.searchParams.delete("list");
+      url.searchParams.delete("start_radio");
+      url.protocol = "https:";
+      url.hostname = "www.yout-ube.com";
 
-      // Opcional (poner USE_MIX = true para probar): añade un mix de
-      // YouTube para que al terminar pase a una canción distinta.
-      if (USE_MIX) {
-        result.searchParams.set("list", "RD" + videoId);
-      }
-
-      return result.toString();
+      return url.toString();
     }
 
     function playSong(item) {
@@ -416,7 +395,7 @@
       const sort = $("sort").value;
 
       displayedItems = items.filter(item =>
-        `${item.title || ""} ${item.by || ""}`
+        ${item.title || ""} ${item.by || ""}
           .toLocaleLowerCase("es")
           .includes(query)
       );
@@ -441,7 +420,7 @@
       }
 
       $("status").textContent =
-        `${displayedItems.length} de ${items.length} canciones`;
+        ${displayedItems.length} de ${items.length} canciones;
 
       const fragment = document.createDocumentFragment();
 
@@ -458,7 +437,7 @@
         image.loading = "lazy";
         image.alt = "";
         image.src = item.thumb ||
-          `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/mqdefault.jpg`;
+          https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/mqdefault.jpg;
 
         const info = document.createElement("div");
 
@@ -494,7 +473,7 @@
         });
 
         if (!response.ok) {
-          throw new Error(`Error HTTP ${response.status}`);
+          throw new Error(Error HTTP ${response.status});
         }
 
         const data = await response.json();
@@ -513,7 +492,7 @@
             dur: Number(item.dur) || 0,
             views: item.views ?? null,
             thumb: item.thumb ||
-              `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`
+              https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg
           }));
 
         $("name").textContent = data.title || "MiTube";
