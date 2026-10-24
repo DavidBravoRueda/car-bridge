@@ -341,6 +341,7 @@
     let items = [];
     let displayedItems = [];
     let currentItem = null;
+    let lastPlayedId = null; // Control estricto para evitar bucles en la misma pista
     let player = null;
     let playerReady = false;
     let initialPlaybackStarted = false;
@@ -358,6 +359,7 @@
     function playSong(item) {
       if (!item || !item.id) return;
 
+      lastPlayedId = currentItem ? currentItem.id : null;
       currentItem = item;
       pendingItem = item;
       updateFeatured(item);
@@ -375,9 +377,9 @@
     function chooseRandomSong() {
       if (!items.length) return null;
 
-      // Evita repetir la canción actual siempre que haya alternativas.
+      // Excluye estrictamente tanto la canción actual como la recién reproducida
       const alternatives = items.filter(
-        item => String(item.id) !== String(currentItem?.id)
+        item => String(item.id) !== String(currentItem?.id) && String(item.id) !== String(lastPlayedId)
       );
 
       const pool = alternatives.length ? alternatives : items;
@@ -402,7 +404,7 @@
         height: "100%",
         videoId: "",
         playerVars: {
-          autoplay: 1, // Cambiado a 1 para asegurar que arranque fluido al cambiar de pista automáticamente
+          autoplay: 1,
           controls: 1,
           rel: 0,
           playsinline: 1
@@ -422,8 +424,7 @@
           },
 
           onStateChange: function (event) {
-            // YT.PlayerState.ENDED vale 0.
-            // Al terminar la canción, salta automáticamente a otra al azar.
+            // Cuando termina el vídeo actual, salta automáticamente al siguiente al azar
             if (event.data === YT.PlayerState.ENDED) {
               playRandom();
             }
@@ -431,17 +432,13 @@
 
           onError: function (event) {
             console.error("Error del reproductor de YouTube:", event.data);
-            setStatus(
-              "No se puede reproducir este vídeo. Saltando al siguiente..."
-            );
-            // Si da error de reproducción (vídeo bloqueado/borrado), salta solo al siguiente para que no se quede colgado
+            setStatus("No se puede reproducir este vídeo. Saltando al siguiente...");
             playRandom();
           }
         }
       });
     }
 
-    // La API busca esta función global cuando termina de cargarse.
     window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 
     function renderSongs() {
@@ -455,13 +452,9 @@
       );
 
       if (sort === "title") {
-        displayedItems.sort((a, b) =>
-          a.title.localeCompare(b.title, "es")
-        );
+        displayedItems.sort((a, b) => a.title.localeCompare(b.title, "es"));
       } else if (sort === "artist") {
-        displayedItems.sort((a, b) =>
-          a.by.localeCompare(b.by, "es")
-        );
+        displayedItems.sort((a, b) => a.by.localeCompare(b.by, "es"));
       } else if (sort === "duration") {
         displayedItems.sort((a, b) => a.dur - b.dur);
       }
@@ -566,9 +559,7 @@
         }
       } catch (error) {
         console.error("Error cargando lista.json:", error);
-        setStatus(
-          "No se pudo cargar lista.json. Comprueba que esté publicado junto a index.html."
-        );
+        setStatus("No se pudo cargar lista.json. Comprueba que esté publicado junto a index.html.");
       }
     }
 
@@ -591,7 +582,6 @@
       else if (items.length) playSong(items[0]);
     });
 
-    // Carga la lista y la API del reproductor.
     loadPlaylist();
 
     const youtubeScript = document.createElement("script");
