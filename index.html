@@ -162,7 +162,7 @@ function fmtN(n){if(!(n>=0))return "";var u="",x=n;if(n>=1e6){x=n/1e6;u=" M"}els
 function ago(ts){if(!(ts>0))return "";var m=(Date.now()-ts)/6e4,h=m/60,d=h/24;
   if(m<60)return "hace "+Math.max(1,m|0)+" min";if(h<24)return "hace "+(h|0)+" h";if(d<30)return "hace "+(d|0)+" d";
   if(d<365)return "hace "+((d/30)|0)+" m";return "hace "+((d/365)|0)+" a"}
-async function one(base,path){var c=new AbortController(),t=setTimeout(function(){c.abort()},12000);
+async function one(base,path){var c=new AbortController(),t=setTimeout(function(){c.abort()},7000);
   try{var r=await fetch(base+path,{signal:c.signal});if(!r.ok)throw new Error(r.status);return await r.json()}finally{clearTimeout(t)}}
 async function getJSON(path){
   var list=[API].concat(APIS.filter(function(a){return a!==API}));
@@ -203,22 +203,15 @@ function head(){$("info").textContent="Lista de reproducción • Público • "
 async function load(){
   say("Cargando la lista…");
   try{
-    var d=await getJSON("/playlists/"+encodeURIComponent(ID));
-    if(d.name){$("name").textContent=d.name;document.title=d.name}
+    var r=await fetch("lista.json?"+Date.now());if(!r.ok)throw new Error(r.status);
+    var d=await r.json();
+    if(d.title){$("name").textContent=d.title;document.title=d.title}
     if(d.uploader){$("author").textContent="de "+d.uploader;$("av2").textContent=$("av1").textContent=d.uploader.charAt(0).toUpperCase()}
-    if(d.description)$("desc").textContent=d.description;
-    total=d.videos||0;
-    var first=conv(d);addRows(first);head();
-    $("cimg").src=d.thumbnailUrl||(first[0]&&first[0].thumb)||"";
-    var next=d.nextpage,n=0;
-    while(next&&n<80){
-      d=await getJSON("/nextpage/playlists/"+encodeURIComponent(ID)+"?nextpage="+encodeURIComponent(next));
-      addRows(conv(d));head();next=d.nextpage;n++;
-    }
-    say(items.length?"":"La lista está vacía o es privada. Ponla pública o no listada.");
-  }catch(e){
-    say("No se ha podido cargar la lista. Toca Reproducir para reintentar.");
-  }
+    var list=(d.items||[]).slice().reverse().map(function(s){return {id:s.id,title:s.title||"Sin título",by:s.by||"",thumb:"https://i.ytimg.com/vi/"+s.id+"/mqdefault.jpg",dur:s.dur||0,views:s.views,up:0,short:s.dur>0&&s.dur<=60}});
+    total=list.length;addRows(list);head();
+    $("cimg").src=list[0]?list[0].thumb:"";
+    say(list.length?"":"La lista aún está vacía. En GitHub, ejecuta la acción “Actualizar lista”.");
+  }catch(e){say("No se ha podido leer la lista. Comprueba que lista.json está junto a index.html.")}
 }
 
 function pick(s){
