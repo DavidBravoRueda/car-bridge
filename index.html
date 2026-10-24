@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101114">
-  <title>MiTubeeeeee</title>
+  <title>MiTube</title>
 
   <style>
     :root {
@@ -341,7 +341,6 @@
     let items = [];
     let displayedItems = [];
     let currentItem = null;
-    let lastPlayedId = null; // Control de seguridad anti-bucle
     let player = null;
     let playerReady = false;
     let initialPlaybackStarted = false;
@@ -359,7 +358,6 @@
     function playSong(item) {
       if (!item || !item.id) return;
 
-      lastPlayedId = currentItem ? currentItem.id : null;
       currentItem = item;
       pendingItem = item;
       updateFeatured(item);
@@ -377,13 +375,17 @@
     function chooseRandomSong() {
       if (!items.length) return null;
 
-      // Excluye tanto la canción actual como la recién reproducida para impedir bucles
-      const alternatives = items.filter(
-        item => String(item.id) !== String(currentItem?.id) && String(item.id) !== String(lastPlayedId)
+      // Ignora entradas duplicadas que apuntan al mismo vídeo.
+      const uniqueItems = [
+        ...new Map(items.map(item => [String(item.id), item])).values()
+      ];
+
+      const currentId = String(currentItem?.id || "");
+      const alternatives = uniqueItems.filter(
+        item => String(item.id) !== currentId
       );
 
-      const pool = alternatives.length ? alternatives : items;
-
+      const pool = alternatives.length ? alternatives : uniqueItems;
       return pool[Math.floor(Math.random() * pool.length)];
     }
 
@@ -424,8 +426,6 @@
           },
 
           onStateChange: function (event) {
-            // YT.PlayerState.ENDED vale 0.
-            // Al terminar, salta de inmediato a una canción diferente al azar.
             if (event.data === YT.PlayerState.ENDED) {
               playRandom();
             }
@@ -441,7 +441,7 @@
       });
     }
 
-    // La API busca esta función global cuando termina de cargarse.
+    // YouTube llama a esta función al terminar de cargar su API.
     window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 
     function renderSongs() {
@@ -591,7 +591,6 @@
       else if (items.length) playSong(items[0]);
     });
 
-    // Carga la lista y la API del reproductor.
     loadPlaylist();
 
     const youtubeScript = document.createElement("script");
