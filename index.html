@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101114">
   <title>MiTube</title>
-
   <style>
     :root {
       color-scheme: dark;
@@ -122,6 +121,10 @@
     .muted { color: var(--muted); }
 
     .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(180px, .8fr);
+      gap: 22px;
+      align-items: center;
       margin: 26px 0 32px;
       padding: 24px;
       background: linear-gradient(130deg, #252a20, #191a20 65%);
@@ -131,20 +134,13 @@
 
     .hero h2 { margin: 0 0 10px; font-size: 24px; }
 
-    #youtube-player {
+    .hero img {
+      display: block;
       width: 100%;
-      max-width: 900px;
       aspect-ratio: 16 / 9;
-      margin-top: 20px;
-      overflow: hidden;
-      background: #000;
+      object-fit: cover;
       border-radius: 12px;
-    }
-
-    #youtube-player iframe {
-      width: 100%;
-      height: 100%;
-      border: 0;
+      background: var(--panel);
     }
 
     .hero-actions {
@@ -233,36 +229,34 @@
 
     @media (max-width: 760px) {
       .layout { grid-template-columns: 1fr; }
-
       aside {
         padding: 16px;
         border-right: 0;
         border-bottom: 1px solid var(--border);
       }
-
       .logo { margin-bottom: 14px; }
       .nav-title { display: none; }
       .nav-button { width: auto; margin: 0 4px 0 0; }
       main { padding: 18px; }
+      .hero { grid-template-columns: 1fr; }
+      .hero img { max-width: 440px; }
     }
 
     @media (max-width: 480px) {
       .topbar { flex-wrap: wrap; }
       #search { flex-basis: 100%; }
-
       .song {
         grid-template-columns: 22px 76px minmax(0, 1fr);
         gap: 9px;
         padding: 9px;
       }
-
       .thumbnail { width: 76px; }
-
       .play-button {
         grid-column: 3;
         justify-self: start;
         min-width: 0;
       }
+      .number { font-size: 12px; }
     }
   </style>
 </head>
@@ -272,49 +266,34 @@
     <aside>
       <div class="logo">Mi<span>Tube</span></div>
       <div class="nav-title">Biblioteca</div>
-      <button class="nav-button active" id="all-button">
-        ♫ Todas las canciones
-      </button>
-      <button class="nav-button" id="shuffle-button">
-        ⤨ Aleatorio
-      </button>
-      <button class="nav-button" id="reload-button">
-        ↻ Recargar lista
-      </button>
+      <button class="nav-button active" id="all-button">♫ Todas las canciones</button>
+      <button class="nav-button" id="shuffle-button">⤨ Aleatorio</button>
+      <button class="nav-button" id="reload-button">↻ Recargar lista</button>
     </aside>
 
     <main>
       <div class="topbar">
-        <input
-          id="search"
-          type="search"
+        <input id="search" type="search"
           placeholder="Buscar canciones o artistas..."
-          autocomplete="off"
-        >
-        <button class="button secondary" id="shuffle-top">
-          Aleatorio
-        </button>
+          autocomplete="off">
+        <button class="button secondary" id="shuffle-top">Aleatorio</button>
       </div>
 
       <h1 id="name">Mi música</h1>
       <div class="muted" id="author">Tu biblioteca musical</div>
 
       <section class="hero">
-        <h2 id="featured-title">Tu música, a un clic</h2>
-        <div class="muted" id="featured-by">
-          Selecciona una canción para reproducirla.
+        <div>
+          <h2 id="featured-title">Tu música, a un clic</h2>
+          <div class="muted" id="featured-by">
+            Selecciona una canción para abrirla.
+          </div>
+          <div class="hero-actions">
+            <button class="button" id="featured-play">▶ Reproducir</button>
+            <button class="button secondary" id="next-button">Siguiente ↗</button>
+          </div>
         </div>
-
-        <div id="youtube-player"></div>
-
-        <div class="hero-actions">
-          <button class="button" id="featured-play">
-            ▶ Reproducir
-          </button>
-          <button class="button secondary" id="next-button">
-            Siguiente aleatoria ↗
-          </button>
-        </div>
+        <img id="featured-image" alt="Portada de la canción">
       </section>
 
       <div class="section-header">
@@ -330,7 +309,7 @@
       <div id="status" role="status">Cargando canciones...</div>
       <div id="songs"></div>
 
-      <footer>MiTube · Reproducción aleatoria automática.</footer>
+      <footer>MiTube · Enlaces al reproductor externo.</footer>
     </main>
   </div>
 
@@ -342,138 +321,107 @@
     let items = [];
     let displayedItems = [];
     let currentItem = null;
-    let player = null;
-    let playerReady = false;
-    let initialPlaybackStarted = false;
-    let pendingItem = null;
 
-    function setStatus(message) {
-      $("status").textContent = message;
-    }
+    function getPlaybackUrl(item) {
+      let originalUrl = item.url;
 
-    function updateFeatured(item) {
-      $("featured-title").textContent = item.title || "Sin título";
-      $("featured-by").textContent = item.by || "";
+      if (!originalUrl && item.id) {
+        originalUrl = "https://www.youtube.com/watch?v=" +
+          encodeURIComponent(item.id);
+      }
+
+      if (!originalUrl) {
+        throw new Error("Esta canción no tiene un enlace válido.");
+      }
+
+      const url = new URL(originalUrl);
+      const validHosts = [
+        "youtube.com",
+        "www.youtube.com",
+        "m.youtube.com",
+        "music.youtube.com",
+        "yout-ube.com",
+        "www.yout-ube.com"
+      ];
+
+      if (!validHosts.includes(url.hostname.toLowerCase())) {
+        throw new Error("El dominio del enlace no es válido.");
+      }
+
+      // Abrir el vídeo individual, sin activar una radio externa.
+      url.searchParams.delete("list");
+      url.searchParams.delete("start_radio");
+      url.protocol = "https:";
+      url.hostname = "www.yout-ube.com";
+
+      return url.toString();
     }
 
     function playSong(item) {
-      if (!item || !item.id) return;
+      try {
+        currentItem = item;
+        $("featured-title").textContent = item.title || "Sin título";
+        $("featured-by").textContent = item.by || "";
+        $("featured-image").src = item.thumb || "";
+        $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
 
-      currentItem = item;
-      pendingItem = item;
-      updateFeatured(item);
-
-      if (!playerReady || !player) {
-        setStatus("Preparando el reproductor...");
-        return;
+        window.location.assign(getPlaybackUrl(item));
+      } catch (error) {
+        console.error(error);
+        $("status").textContent = error.message;
       }
-
-      pendingItem = null;
-      player.loadVideoById(String(item.id));
-      setStatus("Reproduciendo: " + item.title);
-    }
-
-    function chooseRandomSong() {
-      if (!items.length) return null;
-
-      // Evita repetir la canción actual siempre que haya alternativas.
-      const alternatives = items.filter(
-        item => String(item.id) !== String(currentItem?.id)
-      );
-
-      const pool = alternatives.length ? alternatives : items;
-
-      return pool[Math.floor(Math.random() * pool.length)];
     }
 
     function playRandom() {
-      const nextItem = chooseRandomSong();
-
-      if (!nextItem) {
-        setStatus("No hay canciones disponibles.");
+      if (!items.length) {
+        $("status").textContent = "No hay canciones cargadas.";
         return;
+      }
+
+      let nextItem;
+
+      if (items.length === 1) {
+        nextItem = items[0];
+      } else {
+        do {
+          nextItem = items[Math.floor(Math.random() * items.length)];
+        } while (nextItem.id === currentItem?.id);
       }
 
       playSong(nextItem);
     }
-
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player("youtube-player", {
-        width: "100%",
-        height: "100%",
-        videoId: "",
-        playerVars: {
-          autoplay: 0,
-          controls: 1,
-          rel: 0,
-          playsinline: 1
-        },
-        events: {
-          onReady: function () {
-            playerReady = true;
-
-            if (pendingItem) {
-              const item = pendingItem;
-              pendingItem = null;
-              playSong(item);
-            } else if (items.length && !initialPlaybackStarted) {
-              initialPlaybackStarted = true;
-              playSong(items[0]);
-            }
-          },
-
-          onStateChange: function (event) {
-            // YT.PlayerState.ENDED vale 0.
-            // Al terminar, reproducir una canción diferente al azar.
-            if (event.data === YT.PlayerState.ENDED) {
-              playRandom();
-            }
-          },
-
-          onError: function (event) {
-            console.error("Error del reproductor de YouTube:", event.data);
-            setStatus(
-              "No se puede reproducir este vídeo. Prueba otra canción."
-            );
-          }
-        }
-      });
-    }
-
-    // La API busca esta función global cuando termina de cargarse.
-    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 
     function renderSongs() {
       const query = $("search").value.trim().toLocaleLowerCase("es");
       const sort = $("sort").value;
 
       displayedItems = items.filter(item =>
-        `${item.title} ${item.by}`
+        `${item.title || ""} ${item.by || ""}`
           .toLocaleLowerCase("es")
           .includes(query)
       );
 
       if (sort === "title") {
         displayedItems.sort((a, b) =>
-          a.title.localeCompare(b.title, "es")
-        );
+          (a.title || "").localeCompare(b.title || "", "es"));
       } else if (sort === "artist") {
         displayedItems.sort((a, b) =>
-          a.by.localeCompare(b.by, "es")
-        );
+          (a.by || "").localeCompare(b.by || "", "es"));
       } else if (sort === "duration") {
-        displayedItems.sort((a, b) => a.dur - b.dur);
+        displayedItems.sort((a, b) =>
+          (a.dur || 0) - (b.dur || 0));
       }
 
       const container = $("songs");
       container.replaceChildren();
 
       if (!displayedItems.length) {
-        setStatus("No se han encontrado canciones.");
+        $("status").textContent = "No se han encontrado canciones.";
         return;
       }
 
-      setStatus(`${displayedItems.length} de ${items.length} canciones`);
+      $("status").textContent =
+        `${displayedItems.length} de ${items.length} canciones`;
 
       const fragment = document.createDocumentFragment();
 
@@ -496,7 +444,7 @@
 
         const title = document.createElement("div");
         title.className = "song-title";
-        title.textContent = item.title;
+        title.textContent = item.title || "Vídeo sin título";
 
         const artist = document.createElement("div");
         artist.className = "song-artist";
@@ -518,7 +466,7 @@
     }
 
     async function loadPlaylist() {
-      setStatus("Cargando canciones...");
+      $("status").textContent = "Cargando canciones…";
 
       try {
         const response = await fetch("./lista.json?t=" + Date.now(), {
@@ -532,7 +480,7 @@
         const data = await response.json();
 
         if (!Array.isArray(data.items)) {
-          throw new Error("lista.json no contiene un array llamado items.");
+          throw new Error("lista.json no contiene el campo items.");
         }
 
         items = data.items
@@ -551,23 +499,18 @@
         $("name").textContent = data.title || "MiTube";
         $("author").textContent = data.uploader || "Tu biblioteca musical";
 
-        if (!items.length) {
-          setStatus("La lista no contiene canciones.");
-          renderSongs();
-          return;
+        if (items.length) {
+          currentItem = items[0];
+          $("featured-title").textContent = currentItem.title;
+          $("featured-by").textContent = currentItem.by;
+          $("featured-image").src = currentItem.thumb;
         }
 
         renderSongs();
-
-        if (!initialPlaybackStarted) {
-          initialPlaybackStarted = true;
-          playSong(items[0]);
-        }
       } catch (error) {
-        console.error("Error cargando lista.json:", error);
-        setStatus(
-          "No se pudo cargar lista.json. Comprueba que esté publicado junto a index.html."
-        );
+        console.error("No se ha podido cargar la lista:", error);
+        $("status").textContent =
+          "No se ha podido cargar lista.json. Comprueba que está publicado junto a index.html.";
       }
     }
 
@@ -587,618 +530,9 @@
 
     $("featured-play").addEventListener("click", () => {
       if (currentItem) playSong(currentItem);
-      else if (items.length) playSong(items[0]);
     });
 
-    // Carga la lista y la API del reproductor.
     loadPlaylist();
-
-    const youtubeScript = document.createElement("script");
-    youtubeScript.src = "https://www.youtube.com/iframe_api";
-    youtubeScript.async = true;
-    document.head.appendChild(youtubeScript);
-  </script>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101114">
-  <title>MiTube</title>
-
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #101114;
-      --panel: #191a20;
-      --hover: #242630;
-      --text: #f4f4f5;
-      --muted: #a1a1aa;
-      --accent: #b8f500;
-      --border: #30313a;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    button, input, select { font: inherit; }
-    button { cursor: pointer; }
-
-    .layout {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 230px minmax(0, 1fr);
-    }
-
-    aside {
-      padding: 26px 16px;
-      background: #15161b;
-      border-right: 1px solid var(--border);
-    }
-
-    .logo {
-      margin: 0 0 34px;
-      font-size: 27px;
-      font-weight: 800;
-    }
-
-    .logo span { color: var(--accent); }
-
-    .nav-title {
-      margin: 24px 10px 10px;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1.3px;
-    }
-
-    .nav-button {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 5px;
-      text-align: left;
-      color: var(--text);
-      background: transparent;
-      border: 0;
-      border-radius: 8px;
-    }
-
-    .nav-button:hover,
-    .nav-button.active { background: var(--hover); }
-
-    main {
-      min-width: 0;
-      padding: 28px;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 28px;
-    }
-
-    #search {
-      flex: 1;
-      min-width: 0;
-      padding: 14px 16px;
-      color: var(--text);
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      outline: none;
-    }
-
-    #search:focus { border-color: var(--accent); }
-
-    .button {
-      padding: 12px 15px;
-      color: #101114;
-      background: var(--accent);
-      border: 0;
-      border-radius: 9px;
-      font-weight: bold;
-    }
-
-    .button.secondary {
-      color: var(--text);
-      background: var(--hover);
-      border: 1px solid var(--border);
-    }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: clamp(25px, 4vw, 36px);
-    }
-
-    .muted { color: var(--muted); }
-
-    .hero {
-      margin: 26px 0 32px;
-      padding: 24px;
-      background: linear-gradient(130deg, #252a20, #191a20 65%);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-    }
-
-    .hero h2 { margin: 0 0 10px; font-size: 24px; }
-
-    #youtube-player {
-      width: 100%;
-      max-width: 900px;
-      aspect-ratio: 16 / 9;
-      margin-top: 20px;
-      overflow: hidden;
-      background: #000;
-      border-radius: 12px;
-    }
-
-    #youtube-player iframe {
-      width: 100%;
-      height: 100%;
-      border: 0;
-    }
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .section-header {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .section-header h2 { margin: 0; font-size: 22px; }
-
-    #sort {
-      padding: 10px;
-      color: var(--text);
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-
-    #songs { display: grid; gap: 8px; }
-
-    .song {
-      display: grid;
-      grid-template-columns: 36px 100px minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 14px;
-      padding: 12px;
-      background: var(--panel);
-      border: 1px solid transparent;
-      border-radius: 12px;
-    }
-
-    .song:hover { background: var(--hover); }
-    .number { color: var(--muted); text-align: center; }
-
-    .thumbnail {
-      width: 100px;
-      aspect-ratio: 16 / 9;
-      object-fit: cover;
-      background: #30313a;
-      border-radius: 7px;
-    }
-
-    .song-title {
-      margin-bottom: 6px;
-      font-weight: bold;
-      overflow-wrap: anywhere;
-    }
-
-    .song-artist { color: var(--muted); font-size: 13px; }
-
-    .play-button {
-      min-width: 100px;
-      padding: 10px 12px;
-      color: var(--text);
-      background: #30313a;
-      border: 0;
-      border-radius: 8px;
-    }
-
-    .play-button:hover {
-      color: #101114;
-      background: var(--accent);
-    }
-
-    #status {
-      min-height: 24px;
-      margin: 16px 0;
-      color: var(--muted);
-    }
-
-    footer {
-      padding: 28px 0 10px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    @media (max-width: 760px) {
-      .layout { grid-template-columns: 1fr; }
-
-      aside {
-        padding: 16px;
-        border-right: 0;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .logo { margin-bottom: 14px; }
-      .nav-title { display: none; }
-      .nav-button { width: auto; margin: 0 4px 0 0; }
-      main { padding: 18px; }
-    }
-
-    @media (max-width: 480px) {
-      .topbar { flex-wrap: wrap; }
-      #search { flex-basis: 100%; }
-
-      .song {
-        grid-template-columns: 22px 76px minmax(0, 1fr);
-        gap: 9px;
-        padding: 9px;
-      }
-
-      .thumbnail { width: 76px; }
-
-      .play-button {
-        grid-column: 3;
-        justify-self: start;
-        min-width: 0;
-      }
-    }
-  </style>
-</head>
-
-<body>
-  <div class="layout">
-    <aside>
-      <div class="logo">Mi<span>Tube</span></div>
-      <div class="nav-title">Biblioteca</div>
-      <button class="nav-button active" id="all-button">
-        ♫ Todas las canciones
-      </button>
-      <button class="nav-button" id="shuffle-button">
-        ⤨ Aleatorio
-      </button>
-      <button class="nav-button" id="reload-button">
-        ↻ Recargar lista
-      </button>
-    </aside>
-
-    <main>
-      <div class="topbar">
-        <input
-          id="search"
-          type="search"
-          placeholder="Buscar canciones o artistas..."
-          autocomplete="off"
-        >
-        <button class="button secondary" id="shuffle-top">
-          Aleatorio
-        </button>
-      </div>
-
-      <h1 id="name">Mi música</h1>
-      <div class="muted" id="author">Tu biblioteca musical</div>
-
-      <section class="hero">
-        <h2 id="featured-title">Tu música, a un clic</h2>
-        <div class="muted" id="featured-by">
-          Selecciona una canción para reproducirla.
-        </div>
-
-        <div id="youtube-player"></div>
-
-        <div class="hero-actions">
-          <button class="button" id="featured-play">
-            ▶ Reproducir
-          </button>
-          <button class="button secondary" id="next-button">
-            Siguiente aleatoria ↗
-          </button>
-        </div>
-      </section>
-
-      <div class="section-header">
-        <h2>Lista de canciones</h2>
-        <select id="sort" aria-label="Ordenar canciones">
-          <option value="default">Orden original</option>
-          <option value="title">Título A-Z</option>
-          <option value="artist">Artista A-Z</option>
-          <option value="duration">Duración</option>
-        </select>
-      </div>
-
-      <div id="status" role="status">Cargando canciones...</div>
-      <div id="songs"></div>
-
-      <footer>MiTube · Reproducción aleatoria automática.</footer>
-    </main>
-  </div>
-
-  <script>
-    "use strict";
-
-    const $ = id => document.getElementById(id);
-
-    let items = [];
-    let displayedItems = [];
-    let currentItem = null;
-    let player = null;
-    let playerReady = false;
-    let initialPlaybackStarted = false;
-    let pendingItem = null;
-
-    function setStatus(message) {
-      $("status").textContent = message;
-    }
-
-    function updateFeatured(item) {
-      $("featured-title").textContent = item.title || "Sin título";
-      $("featured-by").textContent = item.by || "";
-    }
-
-    function playSong(item) {
-      if (!item || !item.id) return;
-
-      currentItem = item;
-      pendingItem = item;
-      updateFeatured(item);
-
-      if (!playerReady || !player) {
-        setStatus("Preparando el reproductor...");
-        return;
-      }
-
-      pendingItem = null;
-      player.loadVideoById(String(item.id));
-      setStatus("Reproduciendo: " + item.title);
-    }
-
-    function chooseRandomSong() {
-      if (!items.length) return null;
-
-      // Evita repetir la canción actual siempre que haya alternativas.
-      const alternatives = items.filter(
-        item => String(item.id) !== String(currentItem?.id)
-      );
-
-      const pool = alternatives.length ? alternatives : items;
-
-      return pool[Math.floor(Math.random() * pool.length)];
-    }
-
-    function playRandom() {
-      const nextItem = chooseRandomSong();
-
-      if (!nextItem) {
-        setStatus("No hay canciones disponibles.");
-        return;
-      }
-
-      playSong(nextItem);
-    }
-
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player("youtube-player", {
-        width: "100%",
-        height: "100%",
-        videoId: "",
-        playerVars: {
-          autoplay: 0,
-          controls: 1,
-          rel: 0,
-          playsinline: 1
-        },
-        events: {
-          onReady: function () {
-            playerReady = true;
-
-            if (pendingItem) {
-              const item = pendingItem;
-              pendingItem = null;
-              playSong(item);
-            } else if (items.length && !initialPlaybackStarted) {
-              initialPlaybackStarted = true;
-              playSong(items[0]);
-            }
-          },
-
-          onStateChange: function (event) {
-            // YT.PlayerState.ENDED vale 0.
-            // Al terminar, reproducir una canción diferente al azar.
-            if (event.data === YT.PlayerState.ENDED) {
-              playRandom();
-            }
-          },
-
-          onError: function (event) {
-            console.error("Error del reproductor de YouTube:", event.data);
-            setStatus(
-              "No se puede reproducir este vídeo. Prueba otra canción."
-            );
-          }
-        }
-      });
-    }
-
-    // La API busca esta función global cuando termina de cargarse.
-    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-
-    function renderSongs() {
-      const query = $("search").value.trim().toLocaleLowerCase("es");
-      const sort = $("sort").value;
-
-      displayedItems = items.filter(item =>
-        `${item.title} ${item.by}`
-          .toLocaleLowerCase("es")
-          .includes(query)
-      );
-
-      if (sort === "title") {
-        displayedItems.sort((a, b) =>
-          a.title.localeCompare(b.title, "es")
-        );
-      } else if (sort === "artist") {
-        displayedItems.sort((a, b) =>
-          a.by.localeCompare(b.by, "es")
-        );
-      } else if (sort === "duration") {
-        displayedItems.sort((a, b) => a.dur - b.dur);
-      }
-
-      const container = $("songs");
-      container.replaceChildren();
-
-      if (!displayedItems.length) {
-        setStatus("No se han encontrado canciones.");
-        return;
-      }
-
-      setStatus(`${displayedItems.length} de ${items.length} canciones`);
-
-      const fragment = document.createDocumentFragment();
-
-      displayedItems.forEach((item, index) => {
-        const row = document.createElement("article");
-        row.className = "song";
-
-        const number = document.createElement("div");
-        number.className = "number";
-        number.textContent = String(index + 1);
-
-        const image = document.createElement("img");
-        image.className = "thumbnail";
-        image.loading = "lazy";
-        image.alt = "";
-        image.src = item.thumb ||
-          `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/mqdefault.jpg`;
-
-        const info = document.createElement("div");
-
-        const title = document.createElement("div");
-        title.className = "song-title";
-        title.textContent = item.title;
-
-        const artist = document.createElement("div");
-        artist.className = "song-artist";
-        artist.textContent = item.by || "Artista desconocido";
-
-        info.append(title, artist);
-
-        const button = document.createElement("button");
-        button.className = "play-button";
-        button.type = "button";
-        button.textContent = "▶ Reproducir";
-        button.addEventListener("click", () => playSong(item));
-
-        row.append(number, image, info, button);
-        fragment.appendChild(row);
-      });
-
-      container.appendChild(fragment);
-    }
-
-    async function loadPlaylist() {
-      setStatus("Cargando canciones...");
-
-      try {
-        const response = await fetch("./lista.json?t=" + Date.now(), {
-          cache: "no-store"
-        });
-
-        if (!response.ok) {
-          throw new Error(`Error HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (!Array.isArray(data.items)) {
-          throw new Error("lista.json no contiene un array llamado items.");
-        }
-
-        items = data.items
-          .filter(item => item && item.id)
-          .map(item => ({
-            id: String(item.id),
-            url: item.url || "",
-            title: item.title || "Vídeo sin título",
-            by: item.by || "",
-            dur: Number(item.dur) || 0,
-            views: item.views ?? null,
-            thumb: item.thumb ||
-              `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`
-          }));
-
-        $("name").textContent = data.title || "MiTube";
-        $("author").textContent = data.uploader || "Tu biblioteca musical";
-
-        if (!items.length) {
-          setStatus("La lista no contiene canciones.");
-          renderSongs();
-          return;
-        }
-
-        renderSongs();
-
-        if (!initialPlaybackStarted) {
-          initialPlaybackStarted = true;
-          playSong(items[0]);
-        }
-      } catch (error) {
-        console.error("Error cargando lista.json:", error);
-        setStatus(
-          "No se pudo cargar lista.json. Comprueba que esté publicado junto a index.html."
-        );
-      }
-    }
-
-    $("search").addEventListener("input", renderSongs);
-    $("sort").addEventListener("change", renderSongs);
-    $("reload-button").addEventListener("click", loadPlaylist);
-
-    $("all-button").addEventListener("click", () => {
-      $("search").value = "";
-      $("sort").value = "default";
-      renderSongs();
-    });
-
-    $("shuffle-button").addEventListener("click", playRandom);
-    $("shuffle-top").addEventListener("click", playRandom);
-    $("next-button").addEventListener("click", playRandom);
-
-    $("featured-play").addEventListener("click", () => {
-      if (currentItem) playSong(currentItem);
-      else if (items.length) playSong(items[0]);
-    });
-
-    // Carga la lista y la API del reproductor.
-    loadPlaylist();
-
-    const youtubeScript = document.createElement("script");
-    youtubeScript.src = "https://www.youtube.com/iframe_api";
-    youtubeScript.async = true;
-    document.head.appendChild(youtubeScript);
   </script>
 </body>
 </html>
