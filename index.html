@@ -3,53 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Bridge Playlist</title>
+    <title>Car Bridge</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html { width: 100%; height: 100%; background-color: #000000; overflow: hidden; }
-        #player-container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-        #player { width: 100%; height: 100%; }
+        iframe { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
-    <div id="player-container">
-        <div id="player"></div>
-    </div>
-
-    <script>
-        // Carga la API oficial de YouTube de forma dinámica
-        var tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-        var player;
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-                height: '100%',
-                width: '100%',
-                playerVars: {
-                    'listType': 'playlist',
-                    'list': 'PLPBl-I93G56Y',
-                    'autoplay': 1,
-                    'shuffle': 1,
-                    'modestbranding': 1,
-                    'rel': 0,
-                    'controls': 1
-                },
-                events: {
-                    'onReady': function(event) {
-                        event.target.playVideo();
-                    },
-                    'onError': function(event) {
-                        // SI UNA CANCIÓN TIENE BLOQUEADA LA REPRODUCCIÓN EXTERNA, LA SALTA SOLO
-                        if (event.data === 101 || event.data === 150) {
-                            player.nextVideo();
-                        }
-                    }
-                }
-            });
-        }
-    </script>
+    <!-- Forzamos la versión móvil directa de la playlist -->
+    <iframe src="https://m.youtube.com/playlist?list=PLPBl-I93G56Y" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </body>
 </html>
+
