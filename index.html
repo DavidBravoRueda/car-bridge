@@ -2,41 +2,22 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Mi Playlist MIB3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist MIB3 Clean</title>
     <style>
-        body { background: #000; color: #fff; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        #player { width: 100%; height: 100%; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; background-color: #000000; overflow: hidden; }
+        .video-container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+        iframe { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
-    <div id="player"></div>
-
-    <script>
-        // Carga la API oficial de YouTube de forma limpia
-        var tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-        var player;
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-                height: '100%',
-                width: '100%',
-                playerVars: {
-                    'listType': 'playlist',
-                    'list': 'PLPBl-I93G56Y',
-                    'autoplay': 1,
-                    'controls': 1,
-                    'modestbranding': 1
-                },
-                events: {
-                    'onReady': function(event) {
-                        event.target.playVideo();
-                    }
-                }
-            });
-        }
-    </script>
+    <div class="video-container">
+        <iframe 
+            src="https://www.youtube.com/embed/videoseries?list=PLPBl-I93G56Y&autoplay=1&shuffle=1&modestbranding=1&rel=0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen>
+        </iframe>
+    </div>
 </body>
 </html>
