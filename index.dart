@@ -1,12 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class CarBridgeWebView extends StatefulWidget {
-  @override
-  _CarBridgeWebViewState createState() => _CarBridgeWebViewState();
+void main() {
+  runApp(const MyApp());
 }
 
-class _CarBridgeWebViewState extends State<CarBridgeWebView> {
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Car Bridge',
+      theme: ThemeData.dark(),
+      home: const CarBridgeScreen(),
+    );
+  }
+}
+
+class CarBridgeScreen extends StatefulWidget {
+  const CarBridgeScreen({super.key});
+
+  @override
+  State<CarBridgeScreen> createState() => _CarBridgeScreenState();
+}
+
+class _CarBridgeScreenState extends State<CarBridgeScreen> {
   late final WebViewController _controller;
 
   @override
@@ -16,14 +36,14 @@ class _CarBridgeWebViewState extends State<CarBridgeWebView> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
-      // ENGAÑAR A GOOGLE: Forzamos un User-Agent de iPhone real para evitar el captcha/bot check
+      // Forzamos el User-Agent de iPhone real para saltarnos el bloqueo de YouTube
       ..setUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1")
       ..setNavigationDelegate(
         NavigationDelegate(
           onNavigationRequest: (NavigationRequest request) {
             final url = request.url;
 
-            // Lista negra de dominios de anuncios de YouTube/Google para cortarlos al vuelo
+            // Cortamos al vuelo los dominios de anuncios de Google/YouTube
             final List<String> adDomains = [
               'doubleclick.net',
               'googlesyndication.com',
@@ -34,11 +54,11 @@ class _CarBridgeWebViewState extends State<CarBridgeWebView> {
 
             for (var domain in adDomains) {
               if (url.contains(domain)) {
-                return NavigationDecision.prevent; // Bloquea la publi
+                return NavigationDecision.prevent; // Bloquea el anuncio
               }
             }
 
-            return NavigationDecision.navigate; // Permite lo demás
+            return NavigationDecision.navigate; // Deja pasar el vídeo limpio
           },
         ),
       )
