@@ -1,74 +1,57 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Bridge Playlist</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; background-color: #000000; overflow: hidden; }
-        
-        /* Contenedor principal a pantalla completa */
-        #player-container { width: 100%; height: 100%; position: relative; }
-        
-        /* Pantalla negra absoluta que cubre todo hasta que el vídeo arranca */
-        #loader {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #000000;
-            z-index: 10;
-        }
+import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
-        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; }
-    </style>
-</head>
-<body>
+class CarBridgeWebView extends StatefulWidget {
+  @override
+  _CarBridgeWebViewState createState() => _CarBridgeWebViewState();
+}
 
-    <div id="player-container">
-        <!-- Pantalla negra fija que oculta cualquier carga lenta -->
-        <div id="loader"></div>
-        
-        <!-- El reproductor de YouTube incrustado mediante API limpia -->
-        <div id="player"></div>
-    </div>
+class _CarBridgeWebViewState extends State<CarBridgeWebView> {
+  late final WebViewController _controller;
 
-    <script>
-        var tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  @override
+  void initState() {
+    super.initState();
+    
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0x00000000))
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: (NavigationRequest request) {
+            final url = request.url;
 
-        var player;
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-                height: '100%',
-                width: '100%',
-                playerVars: {
-                    'listType': 'playlist',
-                    'list': 'PLPBl-I93G56Y',
-                    'autoplay': 1,
-                    'shuffle': 1,
-                    'modestbranding': 1,
-                    'rel': 0,
-                    'controls': 1
-                },
-                events: {
-                    'onReady': function(event) {
-                        event.target.playVideo();
-                    },
-                    'onStateChange': function(event) {
-                        // En cuanto el reproductor empieza a reproducir de verdad, 
-                        // borramos el fondo negro al instante de golpe
-                        if (event.data == YT.PlayerState.PLAYING) {
-                            var loader = document.getElementById('loader');
-                            if (loader) {
-                                loader.style.display = 'none';
-                            }
-                        }
-                    }
-                }
-            });
-        }
-    </script>
-</body>
-</html>
+            // Lista negra de dominios de anuncios y trackers de YouTube/Google
+            final List<String> adDomains = [
+              'doubleclick.net',
+              'googlesyndication.com',
+              'googleads.g.doubleclick.net',
+              'youtube.com/api/stats/ads',
+              'pagead2.googlesyndication.com',
+            ];
+
+            // Si la petición pertenece a la red de anuncios, la bloqueamos al vuelo
+            for (var domain in adDomains) {
+              if (url.contains(domain)) {
+                return NavigationDecision.prevent; // Bloqueado
+              }
+            }
+
+            return NavigationDecision.navigate; // Permitir el contenido normal
+          },
+        ),
+      )
+      // Cargamos YouTube directamente (puedes meter tu URL de la playlist o la versión TV)
+      ..loadRequest(Uri.parse('https://www.youtube.com/tv#/')); 
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: WebViewWidget(controller: _controller),
+      ),
+    );
+  }
+}
