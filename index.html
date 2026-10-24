@@ -4,302 +4,634 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mi música</title>
+  <meta name="theme-color" content="#101114">
+  <title>MiTube</title>
 
   <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101114;
+      --panel: #191a20;
+      --panel-hover: #242630;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --accent: #b8f500;
+      --border: #30313a;
+    }
+
     * {
       box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      padding: 24px;
-      background: #111318;
-      color: #f5f5f5;
-      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .layout {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+    }
+
+    aside {
+      padding: 26px 16px;
+      background: #15161b;
+      border-right: 1px solid var(--border);
+    }
+
+    .logo {
+      margin: 0 0 34px;
+      font-size: 27px;
+      font-weight: 800;
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    .nav-title {
+      margin: 24px 10px 10px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.3px;
+    }
+
+    .nav-button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 5px;
+      text-align: left;
+      color: var(--text);
+      background: transparent;
+      border: 0;
+      border-radius: 8px;
+    }
+
+    .nav-button:hover,
+    .nav-button.active {
+      background: var(--panel-hover);
     }
 
     main {
-      max-width: 850px;
-      margin: auto;
+      min-width: 0;
+      padding: 28px;
     }
 
-    h1 {
-      margin-bottom: 8px;
-    }
-
-    #status {
-      color: #aaa;
-      margin-bottom: 20px;
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
     }
 
     #search {
+      flex: 1;
+      min-width: 0;
+      padding: 14px 16px;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+    }
+
+    #search:focus {
+      border-color: var(--accent);
+    }
+
+    .button {
+      padding: 12px 15px;
+      color: #101114;
+      background: var(--accent);
+      border: 0;
+      border-radius: 9px;
+      font-weight: bold;
+    }
+
+    .button.secondary {
+      color: var(--text);
+      background: var(--panel-hover);
+      border: 1px solid var(--border);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(25px, 4vw, 36px);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(180px, 0.8fr);
+      gap: 22px;
+      align-items: center;
+      margin: 26px 0 32px;
+      padding: 24px;
+      background: linear-gradient(130deg, #252a20, #191a20 65%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+
+    .hero h2 {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+
+    .hero img {
+      display: block;
       width: 100%;
-      padding: 14px;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 12px;
+      background: var(--panel);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .section-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
       margin-bottom: 16px;
-      border: 1px solid #383b44;
-      border-radius: 10px;
-      background: #20232b;
-      color: white;
-      font-size: 16px;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    #sort {
+      padding: 10px;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
     }
 
     #songs {
       display: grid;
-      gap: 10px;
+      gap: 8px;
     }
 
     .song {
-      display: flex;
+      display: grid;
+      grid-template-columns: 36px 100px minmax(0, 1fr) auto;
       align-items: center;
       gap: 14px;
       padding: 12px;
-      background: #20232b;
-      border-radius: 10px;
+      background: var(--panel);
+      border: 1px solid transparent;
+      border-radius: 12px;
     }
 
-    .song img {
-      width: 112px;
+    .song:hover {
+      background: var(--panel-hover);
+    }
+
+    .song.active {
+      border-color: var(--accent);
+    }
+
+    .number {
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .thumbnail {
+      width: 100px;
       aspect-ratio: 16 / 9;
       object-fit: cover;
-      border-radius: 6px;
-      background: #333;
+      background: #30313a;
+      border-radius: 7px;
     }
 
-    .info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .title {
+    .song-title {
+      margin-bottom: 6px;
       font-weight: bold;
       overflow-wrap: anywhere;
     }
 
-    .artist {
-      margin-top: 6px;
-      color: #aaa;
-      font-size: 14px;
+    .song-artist {
+      color: var(--muted);
+      font-size: 13px;
     }
 
-    button {
-      padding: 11px 15px;
+    .play-button {
+      min-width: 100px;
+      padding: 10px 12px;
+      color: var(--text);
+      background: #30313a;
       border: 0;
       border-radius: 8px;
-      background: #b8f500;
-      color: #111;
-      font-weight: bold;
-      cursor: pointer;
     }
 
-    button:hover {
-      background: #d0ff51;
+    .play-button:hover {
+      color: #101114;
+      background: var(--accent);
     }
 
-    @media (max-width: 500px) {
-      body {
-        padding: 14px;
+    #status {
+      min-height: 24px;
+      margin: 16px 0;
+      color: var(--muted);
+    }
+
+    footer {
+      padding: 28px 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        padding: 16px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .logo {
+        margin-bottom: 14px;
+      }
+
+      .nav-title {
+        display: none;
+      }
+
+      .nav-button {
+        width: auto;
+        margin: 0 4px 0 0;
+      }
+
+      main {
+        padding: 18px;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .hero img {
+        max-width: 440px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .topbar {
+        flex-wrap: wrap;
+      }
+
+      #search {
+        flex-basis: 100%;
       }
 
       .song {
-        gap: 10px;
+        grid-template-columns: 22px 76px minmax(0, 1fr);
+        gap: 9px;
+        padding: 9px;
       }
 
-      .song img {
-        width: 85px;
+      .thumbnail {
+        width: 76px;
       }
 
-      button {
-        padding: 10px;
+      .play-button {
+        grid-column: 3;
+        justify-self: start;
+        min-width: 0;
+      }
+
+      .number {
+        font-size: 12px;
       }
     }
   </style>
 </head>
 
 <body>
-  <main>
-    <h1 id="playlist-title">Mi música</h1>
-    <p id="status">Cargando canciones...</p>
+  <div class="layout">
+    <aside>
+      <div class="logo">Mi<span>Tube</span></div>
 
-    <input
-      id="search"
-      type="search"
-      placeholder="Buscar canción o artista..."
-      autocomplete="off"
-    >
+      <div class="nav-title">Biblioteca</div>
+      <button class="nav-button active" id="all-button">♫ Todas las canciones</button>
+      <button class="nav-button" id="shuffle-button">⤨ Aleatorio</button>
+      <button class="nav-button" id="reload-button">↻ Recargar lista</button>
+    </aside>
 
-    <div id="songs"></div>
-  </main>
+    <main>
+      <div class="topbar">
+        <input
+          id="search"
+          type="search"
+          placeholder="Buscar canciones o artistas..."
+          autocomplete="off"
+        >
+        <button class="button secondary" id="shuffle-top">Aleatorio</button>
+      </div>
+
+      <h1 id="name">Mi música</h1>
+      <div class="muted" id="author">Tu biblioteca musical</div>
+
+      <section class="hero">
+        <div>
+          <h2 id="featured-title">Tu música, a un clic</h2>
+          <div class="muted" id="featured-by">
+            Selecciona una canción para abrirla.
+          </div>
+          <div class="hero-actions">
+            <button class="button" id="featured-play">▶ Reproducir</button>
+            <button class="button secondary" id="next-button">Siguiente ↗</button>
+          </div>
+        </div>
+        <img id="featured-image" alt="Portada de la canción">
+      </section>
+
+      <div class="section-header">
+        <h2>Lista de canciones</h2>
+        <select id="sort" aria-label="Ordenar canciones">
+          <option value="default">Orden original</option>
+          <option value="title">Título A-Z</option>
+          <option value="artist">Artista A-Z</option>
+          <option value="duration">Duración</option>
+        </select>
+      </div>
+
+      <div id="status" role="status">Cargando canciones...</div>
+      <div id="songs"></div>
+
+      <footer>
+        MiTube · Los enlaces se abren en el reproductor externo.
+      </footer>
+    </main>
+  </div>
 
   <script>
     "use strict";
 
-    const statusElement = document.getElementById("status");
-    const songsElement = document.getElementById("songs");
-    const searchElement = document.getElementById("search");
-    const titleElement = document.getElementById("playlist-title");
+    const $ = id => document.getElementById(id);
 
     let items = [];
+    let displayedItems = [];
+    let currentItem = null;
 
     function getPlaybackUrl(item) {
-      // Utiliza el enlace guardado en lista.json.
-      // Si no existe, genera uno compatible con el formato solicitado.
       let originalUrl = item.url;
 
       if (!originalUrl && item.id) {
-        originalUrl =
-          "https://www.youtube.com/watch?v=" +
-          encodeURIComponent(item.id) +
-          "&list=RD" +
-          encodeURIComponent(item.id) +
-          "&start_radio=1";
+        const params = new URLSearchParams({
+          v: item.id,
+          list: "RD" + item.id,
+          start_radio: "1"
+        });
+
+        originalUrl = "https://www.youtube.com/watch?" + params.toString();
       }
 
       if (!originalUrl) {
-        throw new Error("La canción no tiene enlace ni ID.");
+        throw new Error("Esta canción no tiene un enlace válido.");
       }
 
-      let url;
-
-      try {
-        url = new URL(originalUrl);
-      } catch {
-        throw new Error("El enlace de la canción no es válido.");
-      }
-
-      // Solo aceptamos enlaces de YouTube o yout-ube.com.
-      const host = url.hostname.toLowerCase();
+      const url = new URL(originalUrl);
 
       const validHosts = [
         "youtube.com",
         "www.youtube.com",
         "m.youtube.com",
+        "music.youtube.com",
         "yout-ube.com",
         "www.yout-ube.com"
       ];
 
-      if (!validHosts.includes(host)) {
+      if (!validHosts.includes(url.hostname.toLowerCase())) {
         throw new Error("El dominio del enlace no es válido.");
       }
 
-      // Cambia exclusivamente el dominio.
-      // Los parámetros v, list y start_radio se conservan.
+      // Cambiamos únicamente el dominio, conservando v, list,
+      // start_radio y los demás parámetros del enlace.
       url.protocol = "https:";
       url.hostname = "www.yout-ube.com";
-      url.hash = "";
 
       return url.toString();
     }
 
     function playSong(item) {
       try {
+        currentItem = item;
+
+        $("featured-title").textContent = item.title || "Sin título";
+        $("featured-by").textContent = item.by || "";
+        $("featured-image").src = item.thumb ||
+          `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
+
+        $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
+
         const destination = getPlaybackUrl(item);
         window.location.assign(destination);
       } catch (error) {
-        statusElement.textContent = error.message;
+        console.error(error);
+        $("status").textContent = error.message;
       }
     }
 
-    function renderSongs(query = "") {
-      songsElement.replaceChildren();
+    function shuffleItems(list) {
+      const shuffled = list.slice();
 
-      const normalizedQuery = query
-        .trim()
-        .toLocaleLowerCase("es");
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
 
-      const filtered = items.filter(item => {
-        const text = (
-          (item.title || "") + " " + (item.by || "")
-        ).toLocaleLowerCase("es");
+      return shuffled;
+    }
 
-        return text.includes(normalizedQuery);
+    function renderSongs() {
+      const query = $("search").value.trim().toLocaleLowerCase("es");
+      const sort = $("sort").value;
+
+      displayedItems = items.filter(item => {
+        const searchable = `${item.title || ""} ${item.by || ""}`
+          .toLocaleLowerCase("es");
+
+        return searchable.includes(query);
       });
 
-      if (filtered.length === 0) {
-        const message = document.createElement("p");
-        message.textContent = "No se han encontrado canciones.";
-        songsElement.appendChild(message);
+      if (sort === "title") {
+        displayedItems.sort((a, b) =>
+          (a.title || "").localeCompare(b.title || "", "es")
+        );
+      } else if (sort === "artist") {
+        displayedItems.sort((a, b) =>
+          (a.by || "").localeCompare(b.by || "", "es")
+        );
+      } else if (sort === "duration") {
+        displayedItems.sort((a, b) =>
+          (a.dur || 0) - (b.dur || 0)
+        );
+      }
+
+      const container = $("songs");
+      container.replaceChildren();
+
+      if (!displayedItems.length) {
+        $("status").textContent = "No se han encontrado canciones.";
         return;
       }
 
+      $("status").textContent =
+        `${displayedItems.length} de ${items.length} canciones`;
+
       const fragment = document.createDocumentFragment();
 
-      filtered.forEach(item => {
+      displayedItems.forEach((item, index) => {
         const row = document.createElement("article");
         row.className = "song";
 
-        const image = document.createElement("img");
-        image.src = item.thumb ||
-          `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
-        image.alt = "";
-        image.loading = "lazy";
+        const number = document.createElement("div");
+        number.className = "number";
+        number.textContent = String(index + 1);
 
-        image.addEventListener("error", () => {
-          image.style.visibility = "hidden";
-        }, { once: true });
+        const image = document.createElement("img");
+        image.className = "thumbnail";
+        image.loading = "lazy";
+        image.alt = "";
+        image.src = item.thumb ||
+          `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/mqdefault.jpg`;
 
         const info = document.createElement("div");
-        info.className = "info";
 
-        const songTitle = document.createElement("div");
-        songTitle.className = "title";
-        songTitle.textContent = item.title || "Vídeo sin título";
+        const title = document.createElement("div");
+        title.className = "song-title";
+        title.textContent = item.title || "Vídeo sin título";
 
         const artist = document.createElement("div");
-        artist.className = "artist";
-        artist.textContent = item.by || "";
+        artist.className = "song-artist";
+        artist.textContent = item.by || "Artista desconocido";
 
-        info.append(songTitle, artist);
+        info.append(title, artist);
 
         const button = document.createElement("button");
+        button.className = "play-button";
         button.type = "button";
-        button.textContent = "Reproducir";
+        button.textContent = "▶ Reproducir";
         button.addEventListener("click", () => playSong(item));
 
-        row.append(image, info, button);
+        row.append(number, image, info, button);
         fragment.appendChild(row);
       });
 
-      songsElement.appendChild(fragment);
+      container.appendChild(fragment);
     }
 
     async function loadPlaylist() {
+      $("status").textContent = "Cargando canciones…";
+
       try {
-        const response = await fetch("./lista.json", {
+        const response = await fetch("./lista.json?t=" + Date.now(), {
           cache: "no-store"
         });
 
         if (!response.ok) {
-          throw new Error(
-            `No se pudo cargar lista.json (HTTP ${response.status}).`
-          );
+          throw new Error(`Error HTTP ${response.status}`);
         }
 
         const data = await response.json();
 
         if (!Array.isArray(data.items)) {
-          throw new Error("lista.json no contiene una lista de canciones válida.");
+          throw new Error("lista.json no contiene el campo items.");
         }
 
-        items = data.items.filter(item => item && item.id);
+        items = data.items
+          .filter(item => item && item.id)
+          .map(item => ({
+            id: String(item.id),
+            url: item.url || "",
+            title: item.title || "Vídeo sin título",
+            by: item.by || "",
+            dur: Number(item.dur) || 0,
+            views: item.views ?? null,
+            thumb: item.thumb ||
+              `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`
+          }));
 
-        if (items.length === 0) {
-          throw new Error("No hay canciones en lista.json.");
+        $("name").textContent = data.title || "MiTube";
+        $("author").textContent = data.uploader || "Tu biblioteca musical";
+
+        if (items.length) {
+          $("featured-title").textContent = items[0].title;
+          $("featured-by").textContent = items[0].by;
+          $("featured-image").src = items[0].thumb;
+          currentItem = items[0];
         }
-
-        titleElement.textContent = data.title || "Mi música";
-        statusElement.textContent =
-          `${items.length} canciones disponibles`;
 
         renderSongs();
       } catch (error) {
-        statusElement.textContent =
-          "Error al cargar la lista: " + error.message;
+        console.error("No se ha podido cargar la lista:", error);
+        $("status").textContent =
+          "No se ha podido cargar lista.json. Comprueba que está publicado junto a index.html.";
       }
     }
 
-    searchElement.addEventListener("input", () => {
-      renderSongs(searchElement.value);
+    $("search").addEventListener("input", renderSongs);
+    $("sort").addEventListener("change", renderSongs);
+    $("reload-button").addEventListener("click", loadPlaylist);
+    $("all-button").addEventListener("click", () => {
+      $("search").value = "";
+      $("sort").value = "default";
+      renderSongs();
+    });
+
+    function playRandom() {
+      if (!items.length) {
+        $("status").textContent = "No hay canciones cargadas.";
+        return;
+      }
+
+      const item = items[Math.floor(Math.random() * items.length)];
+      playSong(item);
+    }
+
+    $("shuffle-button").addEventListener("click", playRandom);
+    $("shuffle-top").addEventListener("click", playRandom);
+
+    $("featured-play").addEventListener("click", () => {
+      if (currentItem) {
+        playSong(currentItem);
+      }
+    });
+
+    $("next-button").addEventListener("click", () => {
+      if (!items.length) return;
+
+      const currentIndex = items.indexOf(currentItem);
+      const nextIndex = (currentIndex + 1) % items.length;
+      playSong(items[nextIndex]);
     });
 
     loadPlaylist();
