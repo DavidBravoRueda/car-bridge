@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -318,9 +317,22 @@
 
     const $ = id => document.getElementById(id);
 
+    // Máximo aproximado de vídeos que admite una cola watch_videos
+    const MAX_QUEUE = 50;
+
     let items = [];
     let displayedItems = [];
     let currentItem = null;
+
+    // Baraja una copia del array (Fisher-Yates)
+    function shuffle(array) {
+      const a = [...array];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
 
     function getPlaybackUrl(item) {
       let originalUrl = item.url;
@@ -348,13 +360,23 @@
         throw new Error("El dominio del enlace no es válido.");
       }
 
-      // Abrir el vídeo individual, sin activar una radio externa.
-      url.searchParams.delete("list");
-      url.searchParams.delete("start_radio");
-      url.protocol = "https:";
-      url.hostname = "www.yout-ube.com";
+      // Cola aleatoria: primero la canción elegida y después el resto
+      // barajado, para que al terminar pase a otra distinta.
+      const others = shuffle(items.filter(i => i.id !== item.id))
+        .slice(0, MAX_QUEUE - 1)
+        .map(i => i.id);
 
-      return url.toString();
+      if (!others.length) {
+        // Solo hay una canción: enlace individual
+        url.searchParams.delete("list");
+        url.searchParams.delete("start_radio");
+        url.protocol = "https:";
+        url.hostname = "www.yout-ube.com";
+        return url.toString();
+      }
+
+      const ids = [item.id, ...others].map(encodeURIComponent).join(",");
+      return "https://www.yout-ube.com/watch_videos?video_ids=" + ids;
     }
 
     function playSong(item) {
