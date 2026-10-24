@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f0f0f">
 <title>El Biza</title>
+
 <style>
 :root {
   --bg:#0f0f0f;
@@ -15,21 +16,18 @@
   --muted:#aaa;
   --line:#303030;
   color-scheme:dark;
-  box-sizing:border-box;
 }
 * { box-sizing:border-box }
 [hidden] { display:none !important }
 body {
   margin:0;
+  padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);
   background:var(--bg);
   color:var(--ink);
-  font:15px/1.4 Roboto,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
+  font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
 }
 button,input,select { font:inherit;color:inherit }
 button { cursor:pointer }
-:focus-visible { outline:2px solid #3ea6ff;outline-offset:2px }
 .i { width:24px;height:24px;fill:currentColor;flex:none }
 .top {
   position:sticky;top:0;z-index:5;height:56px;
@@ -43,23 +41,22 @@ button { cursor:pointer }
 .ic:hover { background:var(--hover) }
 .logo {
   display:flex;align-items:center;gap:6px;
-  font-weight:700;font-size:20px;letter-spacing:-.5px
+  font-weight:700;font-size:20px
 }
 .lg {
-  width:30px;height:21px;background:#f00;border-radius:6px;
+  width:30px;height:21px;background:red;border-radius:6px;
   display:grid;place-items:center
 }
-.lg .i { width:14px;height:14px;fill:#fff }
 .search {
-  flex:1;max-width:640px;margin:0 auto;
-  display:flex;height:40px
+  flex:1;max-width:640px;margin:auto;display:flex;height:40px
 }
 .search input {
-  flex:1;min-width:0;background:#121212;border:1px solid var(--line);
-  border-right:0;border-radius:40px 0 0 40px;padding:0 16px
+  flex:1;min-width:0;background:#121212;
+  border:1px solid var(--line);border-radius:40px 0 0 40px;
+  padding:0 16px
 }
 .search span {
-  width:64px;background:#222;border:1px solid var(--line);
+  width:56px;background:#222;border:1px solid var(--line);
   border-radius:0 40px 40px 0;display:grid;place-items:center
 }
 .av {
@@ -67,33 +64,33 @@ button { cursor:pointer }
   display:grid;place-items:center;font-weight:600;flex:none
 }
 .nav {
-  position:fixed;top:56px;left:0;bottom:0;width:240px;padding:12px;
-  background:var(--bg);transform:translateX(-100%);
-  transition:transform .18s;z-index:4;overflow:auto
+  position:fixed;top:56px;left:0;bottom:0;width:240px;
+  padding:12px;background:var(--bg);transform:translateX(-100%);
+  transition:transform .18s;z-index:4
 }
 body.nav-open .nav { transform:none }
 .nav button {
-  display:flex;align-items:center;gap:22px;width:100%;padding:0 12px;
-  height:40px;border:0;border-radius:10px;background:none;text-align:left
+  display:flex;align-items:center;gap:22px;width:100%;
+  padding:0 12px;height:40px;border:0;border-radius:10px;
+  background:none;text-align:left
 }
 .nav button:hover,.nav .act { background:var(--hover) }
-.nav hr { border:0;border-top:1px solid var(--line);margin:12px 0 }
 .page {
-  display:grid;grid-template-columns:clamp(300px,32%,420px) 1fr;
-  gap:24px;padding:16px 24px 40px;transition:margin-left .18s
+  display:grid;grid-template-columns:minmax(280px,32%) 1fr;
+  gap:24px;padding:16px 24px 40px
 }
-@media (min-width:1100px) {
+@media(min-width:1100px) {
   body.nav-open .page { margin-left:240px }
 }
-@media (max-width:820px) {
+@media(max-width:820px) {
   .page { grid-template-columns:1fr;padding:12px }
 }
 .card {
-  background:linear-gradient(180deg,#4a4a4c 0%,#262626 55%,#1c1c1c 100%);
+  background:linear-gradient(180deg,#4a4a4c,#262626 55%,#1c1c1c);
   border-radius:24px;padding:24px;align-self:start;
   position:sticky;top:72px
 }
-@media (max-width:820px) {
+@media(max-width:820px) {
   .card { position:static }
 }
 .cover {
@@ -101,53 +98,43 @@ body.nav-open .nav { transform:none }
   overflow:hidden;background:#000
 }
 .cover img,.cover video {
-  width:100%;height:100%;object-fit:cover;display:block
+  width:100%;height:100%;object-fit:contain;display:block
 }
-.cover video { object-fit:contain }
-.cover iframe {
-  position:absolute;inset:0;width:100%;height:100%;
-  border:0;display:block;background:#000
-}
-h1 { font-size:32px;line-height:1.15;margin:20px 0 12px;font-weight:700 }
+h1 { font-size:30px;line-height:1.15;margin:20px 0 12px }
 .by { display:flex;align-items:center;gap:8px;font-weight:600 }
-.by .av { width:28px;height:28px;font-size:14px }
-.meta { color:#d0d0d0;font-size:14px;margin:12px 0 4px }
-.desc { color:#d0d0d0;font-size:14px;margin:12px 0 16px }
+.by .av { width:28px;height:28px }
+.meta,.desc { color:#d0d0d0;font-size:14px }
 .acts { display:flex;gap:10px;align-items:center }
 .white {
-  display:flex;align-items:center;gap:6px;height:48px;
-  padding:0 24px 0 16px;border:0;border-radius:999px;
-  background:#f1f1f1;color:#0f0f0f;font-weight:600;font-size:16px
+  display:flex;align-items:center;gap:8px;height:48px;
+  padding:0 20px;border:0;border-radius:999px;
+  background:#f1f1f1;color:#111;font-weight:600
 }
 .round {
   width:48px;height:48px;border:0;border-radius:50%;
-  background:rgba(255,255,255,.12);display:grid;place-items:center
+  background:#383838;display:grid;place-items:center
 }
-.round:hover { background:rgba(255,255,255,.2) }
-.round[aria-pressed="true"] { background:#f1f1f1;color:#0f0f0f }
+.round[aria-pressed="true"] { background:#eee;color:#111 }
 #now { margin-top:16px }
 #nt { font-weight:600;margin-bottom:10px }
 .ctrl { display:grid;grid-template-columns:1fr 1fr;gap:10px }
 .ctrl button {
-  height:48px;border:0;border-radius:999px;
-  background:rgba(255,255,255,.12);font-weight:600
+  height:44px;border:0;border-radius:999px;background:#383838
 }
-#msg { min-height:20px;margin-top:12px;font-size:13px;color:#d0d0d0 }
-.chips { display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px }
+#msg { min-height:20px;margin-top:12px;font-size:13px;color:#ddd }
+.chips { display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px }
 .chip,select {
   height:40px;border:0;border-radius:10px;background:var(--chip);
-  padding:0 16px;font-weight:500
+  padding:0 12px
 }
-.chip.on { background:#f1f1f1;color:#0f0f0f }
-select { padding-right:12px }
+.chip.on { background:#f1f1f1;color:#111 }
 ul { list-style:none;margin:0;padding:0 }
 #list.rev { display:flex;flex-direction:column-reverse }
-li { content-visibility:auto;contain-intrinsic-size:auto 112px }
 li[hidden] { display:none }
 .row {
-  display:grid;grid-template-columns:40px 168px 1fr 40px;gap:12px;
-  align-items:start;width:100%;text-align:left;background:none;
-  border:0;border-radius:12px;padding:8px 4px
+  display:grid;grid-template-columns:32px minmax(100px,168px) 1fr;
+  gap:12px;align-items:start;width:100%;text-align:left;
+  background:none;border:0;border-radius:12px;padding:8px 4px
 }
 .row:hover,.row.on { background:var(--hover) }
 .n { color:var(--muted);text-align:center;align-self:center }
@@ -157,108 +144,91 @@ li[hidden] { display:none }
 }
 .th img { width:100%;height:100%;object-fit:cover;display:block }
 .th em {
-  position:absolute;right:4px;bottom:4px;background:rgba(0,0,0,.8);
-  font-style:normal;font-size:12px;font-weight:500;
-  padding:1px 4px;border-radius:4px
+  position:absolute;right:4px;bottom:4px;background:#000c;
+  font-style:normal;font-size:12px;padding:1px 4px
 }
 .tx b {
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
-  overflow:hidden;font-size:18px;font-weight:500;line-height:1.3
+  overflow:hidden;font-size:16px;font-weight:500
 }
-.tx small { display:block;margin-top:6px;color:var(--muted);font-size:14px }
-.dots { align-self:center;opacity:.85 }
-@media (max-width:560px) {
-  .row { grid-template-columns:28px 120px 1fr }
-  .dots { display:none }
-  .tx b { font-size:15px }
-  h1 { font-size:26px }
+.tx small { display:block;margin-top:6px;color:var(--muted) }
+@media(max-width:480px) {
+  .page { padding:10px }
+  .card { padding:16px }
+  .row { grid-template-columns:24px 110px 1fr;gap:8px }
+  .tx b { font-size:14px }
+  .logo { font-size:16px }
+  .top { gap:8px;padding:0 8px }
 }
 </style>
 </head>
-<body>
 
-<svg style="display:none" aria-hidden="true">
-<symbol id="i-menu" viewBox="0 0 24 24">
-  <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-</symbol>
-<symbol id="i-search" viewBox="0 0 24 24">
-  <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-</symbol>
-<symbol id="i-home" viewBox="0 0 24 24">
-  <path d="M12 4.33l7 6.12V20h-4v-6H9v6H5v-9.55l7-6.12M12 3L4 10v11h6v-6h4v6h6V10l-8-7z"/>
-</symbol>
-<symbol id="i-play" viewBox="0 0 24 24">
-  <path d="M8 5v14l11-7z"/>
-</symbol>
-<symbol id="i-shuf" viewBox="0 0 24 24">
-  <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
-</symbol>
-<symbol id="i-dots" viewBox="0 0 24 24">
-  <path d="M12 8a2 2 0 100-4 2 2 0 000 4zm0 2a2 2 0 100 4 2 2 0 000-4zm0 6a2 2 0 100 4 2 2 0 000-4z"/>
-</symbol>
+<body>
+<svg hidden aria-hidden="true">
+  <symbol id="menu" viewBox="0 0 24 24">
+    <path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/>
+  </symbol>
+  <symbol id="search" viewBox="0 0 24 24">
+    <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+  </symbol>
+  <symbol id="play" viewBox="0 0 24 24">
+    <path d="M8 5v14l11-7z"/>
+  </symbol>
+  <symbol id="shuffle" viewBox="0 0 24 24">
+    <path d="M17 3h4v6h-2V6.41l-4.3 4.3-1.4-1.42L17.59 5H17zM3 7h4l10 10h2v-3h2v5h-5v-2h-1L5 9H3zm0 10h4l2-2 1.4 1.4L7.8 19H3z"/>
+  </symbol>
 </svg>
 
 <header class="top">
-  <button class="ic" id="burger" type="button" aria-label="Menú">
-    <svg class="i"><use href="#i-menu"/></svg>
+  <button class="ic" id="burger" aria-label="Menú">
+    <svg class="i"><use href="#menu"/></svg>
   </button>
   <div class="logo">
-    <span class="lg"><svg class="i"><use href="#i-play"/></svg></span>
+    <span class="lg"><svg class="i"><use href="#play"/></svg></span>
     MiTube
   </div>
-  <form class="search" onsubmit="return false" role="search">
-    <input id="q" type="search" placeholder="Buscar" aria-label="Buscar en la lista" autocomplete="off">
-    <span><svg class="i"><use href="#i-search"/></svg></span>
+  <form class="search" onsubmit="return false">
+    <input id="q" type="search" placeholder="Buscar canciones" autocomplete="off">
+    <span><svg class="i"><use href="#search"/></svg></span>
   </form>
   <div class="av" id="av1">D</div>
 </header>
 
-<nav class="nav" id="nav" aria-label="Menú">
-  <button type="button" id="nHome" class="act">
-    <svg class="i"><use href="#i-home"/></svg>Mi lista
-  </button>
-  <button type="button" id="nShuf">
-    <svg class="i"><use href="#i-shuf"/></svg>
-    <span id="nShufT">Aleatorio: sí</span>
-  </button>
+<nav class="nav">
+  <button id="nHome" class="act">Mi lista</button>
+  <button id="nShuf">Aleatorio: sí</button>
 </nav>
 
 <main class="page">
   <section class="card">
     <div class="cover">
       <img id="cimg" alt="">
-      <iframe
-        id="v"
-        title="Reproductor de vídeo"
-        hidden
-        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-        allowfullscreen
-        referrerpolicy="strict-origin-when-cross-origin"
-      ></iframe>
+      <video id="v" controls playsinline webkit-playsinline preload="metadata" hidden></video>
     </div>
 
     <h1 id="name">El Biza Alhaurino</h1>
     <div class="by">
       <span class="av" id="av2">D</span>
-      <span id="author">de David Bravo Rueda</span>
+      <span id="author">David Bravo Rueda</span>
     </div>
-    <p class="meta" id="info">Lista de reproducción • Público</p>
-    <p class="desc" id="desc">Converted from Spotify by Playlist Buddy</p>
+
+    <p class="meta" id="info">Cargando lista…</p>
+    <p class="desc">Lista de reproducción</p>
 
     <div class="acts">
-      <button class="white" id="play" type="button">
-        <svg class="i"><use href="#i-play"/></svg>Reproducir
+      <button class="white" id="play">
+        <svg class="i"><use href="#play"/></svg>Reproducir
       </button>
-      <button class="round" id="shufT" type="button" aria-pressed="true" aria-label="Aleatorio" title="Aleatorio">
-        <svg class="i"><use href="#i-shuf"/></svg>
+      <button class="round" id="shufT" aria-pressed="true" aria-label="Aleatorio">
+        <svg class="i"><use href="#shuffle"/></svg>
       </button>
     </div>
 
     <div id="now" hidden>
       <div id="nt"></div>
       <div class="ctrl">
-        <button id="prev" type="button">Anterior</button>
-        <button id="next" type="button">Siguiente</button>
+        <button id="prev">Anterior</button>
+        <button id="next">Siguiente</button>
       </div>
     </div>
     <div id="msg" role="status"></div>
@@ -266,15 +236,15 @@ li[hidden] { display:none }
 
   <section>
     <div class="chips">
-      <select id="sort" aria-label="Ordenar">
-        <option value="new">Fecha de inclusión (más recientes)</option>
-        <option value="old">Fecha de inclusión (más antiguos)</option>
+      <select id="sort" aria-label="Orden">
+        <option value="new">Más recientes</option>
+        <option value="old">Más antiguos</option>
       </select>
-      <button class="chip on" data-f="all" type="button">Todo</button>
-      <button class="chip" data-f="vid" type="button">Vídeos</button>
-      <button class="chip" data-f="sh" type="button">Shorts</button>
+      <button class="chip on" data-f="all">Todo</button>
+      <button class="chip" data-f="vid">Vídeos</button>
+      <button class="chip" data-f="sh">Shorts</button>
     </div>
-    <ul id="list" aria-label="Canciones de la lista"></ul>
+    <ul id="list"></ul>
   </section>
 </main>
 
@@ -282,188 +252,151 @@ li[hidden] { display:none }
 (function () {
   "use strict";
 
-  var $ = function (id) {
-    return document.getElementById(id);
-  };
+  const API_LIST = [
+    "https://pipedapi.adminforge.de",
+    "https://api.piped.private.coffee",
+    "https://pipedapi.leptons.xyz"
+  ];
 
-  var v = $("v");
-  var listEl = $("list");
+  const $ = id => document.getElementById(id);
+  const video = $("v");
+  const listEl = $("list");
 
-  var items = [];
-  var lis = [];
-  var rows = [];
-  var order = [];
-  var pos = 0;
-  var shuffleOn = true;
-  var total = 0;
-  var filt = "all";
-  var q = "";
-  var playGeneration = 0;
+  let items = [];
+  let rows = [];
+  let lis = [];
+  let order = [];
+  let pos = 0;
+  let shuffleOn = true;
+  let filt = "all";
+  let query = "";
+  let playToken = 0;
+  let userStarted = false;
 
-  if (window.innerWidth >= 1100) {
+  if (innerWidth >= 1100) {
     document.body.classList.add("nav-open");
   }
 
-  $("burger").onclick = function () {
+  $("burger").onclick = () =>
     document.body.classList.toggle("nav-open");
-  };
 
-  $("nHome").onclick = function () {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  $("nHome").onclick = () =>
+    window.scrollTo({top:0,behavior:"smooth"});
 
   function say(message) {
     $("msg").textContent = message;
   }
 
   function shuffle(array) {
-    for (var i = array.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var temp = array[i];
-      array[i] = array[j];
-      array[j] = temp;
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
   }
 
-  function dur(seconds) {
+  function formatDuration(seconds) {
     seconds = Math.max(0, Number(seconds) || 0);
-    var h = Math.floor(seconds / 3600);
-    var m = Math.floor((seconds % 3600) / 60);
-    var s = Math.floor(seconds % 60);
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
 
-    return (h ? h + ":" + String(m).padStart(2, "0") : m) +
-      ":" + String(s).padStart(2, "0");
+    return (hours ? hours + ":" + String(minutes).padStart(2,"0") : minutes)
+      + ":" + String(secs).padStart(2,"0");
   }
 
-  function fmtN(number) {
+  function formatViews(number) {
     if (!(number >= 0)) return "";
-
-    var unit = "";
-    var value = number;
-
-    if (number >= 1000000) {
-      value = number / 1000000;
-      unit = " M";
-    } else if (number >= 1000) {
-      value = number / 1000;
-      unit = " K";
-    }
-
-    var text = (unit && value < 10
-      ? value.toFixed(1)
-      : String(Math.round(value))).replace(".", ",");
-
-    return text.replace(",0", "") + unit;
+    if (number >= 1e6) return (number / 1e6).toFixed(1) + " M";
+    if (number >= 1000) return Math.round(number / 1000) + " K";
+    return String(number);
   }
 
-  function ago(timestamp) {
-    if (!(timestamp > 0)) return "";
-
-    var minutes = (Date.now() - timestamp) / 60000;
-    var hours = minutes / 60;
-    var days = hours / 24;
-
-    if (minutes < 60) return "hace " + Math.max(1, minutes | 0) + " min";
-    if (hours < 24) return "hace " + (hours | 0) + " h";
-    if (days < 30) return "hace " + (days | 0) + " d";
-    if (days < 365) return "hace " + ((days / 30) | 0) + " m";
-
-    return "hace " + ((days / 365) | 0) + " a";
-  }
-
-  function apply() {
-    items.forEach(function (item, index) {
-      var matchesFilter =
+  function applyFilters() {
+    items.forEach((item, index) => {
+      const matchesType =
         filt === "all" ||
         (filt === "vid" && !item.short) ||
         (filt === "sh" && item.short);
 
-      var text = (item.title + " " + item.by).toLowerCase();
-      lis[index].hidden = !(matchesFilter && (!q || text.indexOf(q) > -1));
+      const text = (item.title + " " + item.by).toLowerCase();
+      lis[index].hidden = !(matchesType && text.includes(query));
     });
   }
 
-  function makeElement(tag, className, text) {
-    var element = document.createElement(tag);
-
-    if (className) element.className = className;
-    if (text != null) element.textContent = text;
-
-    return element;
+  function element(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
   }
 
-  function addRows(newItems) {
-    var fragment = document.createDocumentFragment();
+  function renderItems(data) {
+    const fragment = document.createDocumentFragment();
 
-    newItems.forEach(function (item) {
-      var index = items.length;
+    data.forEach(item => {
+      const index = items.length;
       items.push(item);
 
-      var li = document.createElement("li");
-      var button = makeElement("button", "row");
+      const li = document.createElement("li");
+      const button = element("button","row");
       button.type = "button";
       button.dataset.i = index;
 
-      var thumbnail = makeElement("span", "th");
+      const thumb = element("span","th");
 
-      if (item.thumb) {
-        var image = document.createElement("img");
-        image.loading = "lazy";
-        image.alt = "";
-        image.src = item.thumb;
-        thumbnail.appendChild(image);
-      }
+      const image = document.createElement("img");
+      image.loading = "lazy";
+      image.alt = "";
+      image.src = item.thumb;
+      thumb.appendChild(image);
 
       if (item.dur > 0) {
-        thumbnail.appendChild(makeElement("em", null, dur(item.dur)));
+        thumb.appendChild(element("em",null,formatDuration(item.dur)));
       }
 
-      var text = makeElement("span", "tx");
-      text.appendChild(makeElement("b", null, item.title));
+      const text = element("span","tx");
+      text.appendChild(element("b",null,item.title));
 
-      var details = [item.by, fmtN(item.views), ago(item.up)]
-        .filter(Boolean)
-        .join(" • ");
+      const details = [
+        item.by,
+        formatViews(item.views)
+      ].filter(Boolean).join(" • ");
 
-      text.appendChild(makeElement("small", null, details));
+      text.appendChild(element("small",null,details));
 
-      var dots = makeElement("span", "dots");
-      dots.innerHTML =
-        '<svg class="i" aria-hidden="true"><use href="#i-dots"></use></svg>';
-
-      button.appendChild(makeElement("span", "n", index + 1));
-      button.appendChild(thumbnail);
-      button.appendChild(text);
-      button.appendChild(dots);
+      button.append(
+        element("span","n",index + 1),
+        thumb,
+        text
+      );
 
       li.appendChild(button);
       fragment.appendChild(li);
-
       lis[index] = li;
       rows[index] = button;
     });
 
     listEl.appendChild(fragment);
-    apply();
+    applyFilters();
   }
 
-  async function load() {
-    say("Cargando la lista…");
+  async function loadList() {
+    say("Cargando lista…");
 
     try {
-      var response = await fetch("./lista.json?t=" + Date.now(), {
-        cache: "no-store"
+      const response = await fetch("./lista.json?t=" + Date.now(), {
+        cache:"no-store"
       });
 
       if (!response.ok) {
         throw new Error("HTTP " + response.status);
       }
 
-      var data = await response.json();
+      const data = await response.json();
 
       if (!Array.isArray(data.items)) {
-        throw new Error("El JSON no contiene un array items");
+        throw new Error("Formato JSON incorrecto");
       }
 
       if (data.title) {
@@ -472,211 +405,247 @@ li[hidden] { display:none }
       }
 
       if (data.uploader) {
-        $("author").textContent = "de " + data.uploader;
-        $("av2").textContent = data.uploader.charAt(0).toUpperCase();
-        $("av1").textContent = data.uploader.charAt(0).toUpperCase();
+        $("author").textContent = data.uploader;
+        $("av1").textContent = data.uploader[0].toUpperCase();
+        $("av2").textContent = data.uploader[0].toUpperCase();
       }
 
-      var parsedItems = data.items
-        .filter(function (item) {
-          return item && /^[A-Za-z0-9_-]{11}$/.test(String(item.id || ""));
-        })
+      const parsed = data.items
+        .filter(item => item && /^[\w-]{11}$/.test(item.id))
         .slice()
         .reverse()
-        .map(function (item) {
-          return {
-            id: String(item.id),
-            title: item.title || "Sin título",
-            by: item.by || "",
-            thumb: "https://i.ytimg.com/vi/" +
-              encodeURIComponent(item.id) + "/mqdefault.jpg",
-            dur: Number(item.dur) || 0,
-            views: item.views,
-            up: 0,
-            short: Number(item.dur) > 0 && Number(item.dur) <= 60
-          };
-        });
+        .map(item => ({
+          id:item.id,
+          title:item.title || "Sin título",
+          by:item.by || "",
+          thumb:"https://i.ytimg.com/vi/" + item.id + "/mqdefault.jpg",
+          dur:Number(item.dur) || 0,
+          views:Number(item.views) || 0,
+          short:Number(item.dur) > 0 && Number(item.dur) <= 60
+        }));
 
-      total = parsedItems.length;
-      addRows(parsedItems);
+      renderItems(parsed);
 
       $("info").textContent =
-        "Lista de reproducción • Público • " + total + " vídeos";
+        "Lista de reproducción • " + parsed.length + " vídeos";
 
-      $("cimg").src = parsedItems[0] ? parsedItems[0].thumb : "";
-
-      if (total) {
-        say("Lista cargada: " + total + " canciones.");
+      if (parsed.length) {
+        $("cimg").src = parsed[0].thumb;
+        say("Lista cargada: " + parsed.length + " canciones.");
       } else {
-        say("No hay vídeos válidos en lista.json.");
+        say("La lista no contiene vídeos válidos.");
       }
     } catch (error) {
-      console.error("Error cargando lista.json:", error);
-      say("No se ha podido cargar lista.json. Comprueba el archivo y su formato.");
+      console.error(error);
+      say("No se pudo cargar lista.json. Comprueba el archivo.");
     }
   }
 
-  /*
-   * Reproduce usando el reproductor oficial de YouTube.
-   * No consulta Piped ni intenta cambiar de canción
-   * cuando YouTube tarda o rechaza una reproducción.
-   */
-  function play(index) {
+  async function requestStreams(id) {
+    let lastError;
+
+    for (const base of API_LIST) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 9000);
+
+      try {
+        const response = await fetch(
+          base + "/streams/" + encodeURIComponent(id),
+          {signal:controller.signal}
+        );
+
+        if (!response.ok) {
+          throw new Error("Servidor HTTP " + response.status);
+        }
+
+        return await response.json();
+      } catch (error) {
+        lastError = error;
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    throw lastError || new Error("No hay servidores disponibles");
+  }
+
+  function chooseStream(data) {
+    const streams = (data.videoStreams || [])
+      .filter(stream => {
+        const type = stream.mimeType || stream.format || "";
+        return !stream.videoOnly && /video\/mp4/i.test(type);
+      })
+      .sort((a,b) =>
+        (b.height || 0) - (a.height || 0)
+      );
+
+    if (streams.length) return streams[0].url;
+
+    // HLS solo se usa cuando el servidor lo ofrece.
+    return data.hls || data.hlsUrl || null;
+  }
+
+  async function play(index) {
     if (!order.length) {
       say("La lista está vacía.");
       return;
     }
 
     pos = (index + order.length) % order.length;
+    const token = ++playToken;
+    const item = items[order[pos]];
 
-    var itemIndex = order[pos];
-    var item = items[itemIndex];
+    rows.forEach(row => row.classList.remove("on"));
 
-    if (!item) {
-      say("No se encuentra esta canción en la lista.");
-      return;
-    }
-
-    playGeneration++;
-
-    rows.forEach(function (row) {
-      row.classList.remove("on");
-    });
-
-    if (rows[itemIndex]) {
-      rows[itemIndex].classList.add("on");
-      rows[itemIndex].scrollIntoView({
-        block: "nearest",
-        behavior: "smooth"
-      });
+    const row = rows[order[pos]];
+    if (row) {
+      row.classList.add("on");
+      row.scrollIntoView({block:"nearest",behavior:"smooth"});
     }
 
     $("now").hidden = false;
     $("nt").textContent = item.title;
     $("cimg").hidden = true;
-    v.hidden = false;
+    video.hidden = false;
 
-    /*
-     * El parámetro enablejsapi no es necesario para
-     * reproducir. playsinline ayuda a mantener el vídeo
-     * dentro de Safari en iPhone.
-     */
-    v.src =
-      "https://www.youtube-nocookie.com/embed/" +
-      encodeURIComponent(item.id) +
-      "?autoplay=1&playsinline=1&rel=0";
+    // Detener la pista anterior sin activar el siguiente tema.
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
 
-    say("Cargando vídeo: " + item.title +
-      ". Si no empieza, pulsa reproducir dentro del vídeo.");
+    say("Cargando: " + item.title);
 
-    if ("mediaSession" in navigator &&
-        typeof MediaMetadata !== "undefined") {
-      try {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: item.title,
-          artist: item.by || "El Biza Alhaurino"
-        });
+    try {
+      const data = await requestStreams(item.id);
 
-        navigator.mediaSession.setActionHandler("nexttrack", function () {
-          play(pos + 1);
-        });
+      if (token !== playToken) return;
 
-        navigator.mediaSession.setActionHandler("previoustrack", function () {
-          play(pos - 1);
-        });
-      } catch (error) {
-        console.warn("Media Session no disponible:", error);
+      const url = chooseStream(data);
+
+      if (!url) {
+        throw new Error("No hay un formato MP4 compatible disponible");
       }
+
+      video.src = url;
+      video.load();
+
+      try {
+        await video.play();
+      } catch (error) {
+        if (token !== playToken) return;
+
+        if (error.name === "NotAllowedError") {
+          say("Safari bloqueó el inicio automático. Pulsa ▶ en el vídeo.");
+        } else {
+          say("No se pudo iniciar el vídeo. Comprueba la conexión.");
+        }
+        return;
+      }
+
+      if (token !== playToken) {
+        video.pause();
+        return;
+      }
+
+      say("");
+
+      if ("mediaSession" in navigator &&
+          typeof MediaMetadata !== "undefined") {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title:item.title,
+          artist:item.by || "El Biza Alhaurino"
+        });
+
+        navigator.mediaSession.setActionHandler("nexttrack",() => play(pos + 1));
+        navigator.mediaSession.setActionHandler("previoustrack",() => play(pos - 1));
+      }
+    } catch (error) {
+      if (token !== playToken) return;
+      console.error("Error de reproducción:",error);
+      say("No se pudo cargar esta canción. Pulsa Siguiente para continuar.");
     }
   }
 
   function startAt(first) {
-    var all = items.map(function (_, index) {
-      return index;
-    });
-
-    if (!all.length) {
-      say("No hay canciones para reproducir.");
+    if (!items.length) {
+      say("No hay canciones disponibles.");
       return;
     }
 
-    if (shuffleOn) {
-      if (first >= 0) {
-        var rest = all.filter(function (index) {
-          return index !== first;
-        });
+    const all = items.map((_,index) => index);
 
-        order = [first].concat(shuffle(rest));
-      } else {
-        order = shuffle(all);
-      }
+    if (shuffleOn) {
+      const rest = all.filter(index => index !== first);
+      order = first >= 0
+        ? [first].concat(shuffle(rest))
+        : shuffle(all);
     } else {
       order = first >= 0
-        ? all.slice(first).concat(all.slice(0, first))
+        ? all.slice(first).concat(all.slice(0,first))
         : all;
     }
 
+    userStarted = true;
     play(0);
   }
 
   function toggleShuffle() {
     shuffleOn = !shuffleOn;
-
-    $("shufT").setAttribute("aria-pressed", String(shuffleOn));
-    $("nShufT").textContent = "Aleatorio: " + (shuffleOn ? "sí" : "no");
-    say("Reproducción aleatoria: " + (shuffleOn ? "activada" : "desactivada"));
+    $("shufT").setAttribute("aria-pressed",String(shuffleOn));
+    $("nShuf").textContent = "Aleatorio: " + (shuffleOn ? "sí" : "no");
   }
 
-  listEl.addEventListener("click", function (event) {
-    var button = event.target.closest(".row");
-
-    if (button) {
-      startAt(Number(button.dataset.i));
-    }
+  listEl.addEventListener("click", event => {
+    const button = event.target.closest(".row");
+    if (button) startAt(Number(button.dataset.i));
   });
 
-  $("play").onclick = function () {
-    if (!items.length) {
-      load();
-      return;
-    }
-
+  $("play").onclick = () => {
+    if (!items.length) return;
     startAt(-1);
   };
 
   $("shufT").onclick = toggleShuffle;
   $("nShuf").onclick = toggleShuffle;
 
-  $("next").onclick = function () {
-    play(pos + 1);
+  $("next").onclick = () => play(pos + 1);
+  $("prev").onclick = () => play(pos - 1);
+
+  $("sort").onchange = event => {
+    listEl.classList.toggle("rev",event.target.value === "old");
   };
 
-  $("prev").onclick = function () {
-    play(pos - 1);
-  };
-
-  $("sort").onchange = function () {
-    listEl.classList.toggle("rev", this.value === "old");
-  };
-
-  document.querySelectorAll(".chip").forEach(function (chip) {
-    chip.onclick = function () {
-      document.querySelectorAll(".chip").forEach(function (other) {
-        other.classList.remove("on");
-      });
-
+  document.querySelectorAll(".chip").forEach(chip => {
+    chip.onclick = () => {
+      document.querySelectorAll(".chip").forEach(other =>
+        other.classList.remove("on")
+      );
       chip.classList.add("on");
       filt = chip.dataset.f;
-      apply();
+      applyFilters();
     };
   });
 
-  $("q").addEventListener("input", function () {
-    q = this.value.trim().toLowerCase();
-    apply();
+  $("q").addEventListener("input",event => {
+    query = event.target.value.trim().toLowerCase();
+    applyFilters();
   });
 
-  load();
+  // Solo avanzar cuando el vídeo haya terminado normalmente.
+  // Un error de red NO provoca una cadena infinita de saltos.
+  video.addEventListener("ended",() => {
+    if (userStarted) play(pos + 1);
+  });
+
+  video.addEventListener("playing",() => say(""));
+
+  video.addEventListener("error",() => {
+    if (video.currentSrc) {
+      say("Error de vídeo. No se saltará automáticamente.");
+    }
+  });
+
+  loadList();
 })();
 </script>
 </body>
