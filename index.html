@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -403,7 +402,7 @@
         height: "100%",
         videoId: "",
         playerVars: {
-          autoplay: 0,
+          autoplay: 1, // Cambiado a 1 para asegurar que arranque fluido al cambiar de pista automáticamente
           controls: 1,
           rel: 0,
           playsinline: 1
@@ -424,7 +423,7 @@
 
           onStateChange: function (event) {
             // YT.PlayerState.ENDED vale 0.
-            // Al terminar, reproducir una canción diferente al azar.
+            // Al terminar la canción, salta automáticamente a otra al azar.
             if (event.data === YT.PlayerState.ENDED) {
               playRandom();
             }
@@ -433,8 +432,10 @@
           onError: function (event) {
             console.error("Error del reproductor de YouTube:", event.data);
             setStatus(
-              "No se puede reproducir este vídeo. Prueba otra canción."
+              "No se puede reproducir este vídeo. Saltando al siguiente..."
             );
+            // Si da error de reproducción (vídeo bloqueado/borrado), salta solo al siguiente para que no se quede colgado
+            playRandom();
           }
         }
       });
