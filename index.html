@@ -317,29 +317,16 @@
 
     const $ = id => document.getElementById(id);
 
-    // true = envía al reproductor una cola aleatoria (la canción elegida
-    // primero y el resto barajado), así al terminar pasa a otra canción
-    // distinta. false = enlace simple de una sola canción (se repite).
-    const USE_QUEUE = true;
-
-    // Máximo de canciones en la cola (el límite de YouTube es 50)
-    const QUEUE_SIZE = 50;
+    // Segundos extra tras la duración antes de pasar a la siguiente
+    const EXTRA_SECONDS = 3;
+    const PLAYER_TAB = "mitube-player";
 
     let items = [];
     let displayedItems = [];
     let currentItem = null;
+    let nextTimer = null;
 
-    // Baraja una copia del array (Fisher-Yates)
-    function shuffle(array) {
-      const a = [...array];
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
-    }
-
-    function getVideoId(item) {
+    function getPlaybackUrl(item) {
       let originalUrl = item.url;
 
       if (!originalUrl && item.id) {
@@ -365,32 +352,18 @@
         throw new Error("El dominio del enlace no es válido.");
       }
 
-      return url.searchParams.get("v") || item.id;
-    }
-
-    function getPlaybackUrl(item) {
-      const videoId = getVideoId(item);
-
-      if (USE_QUEUE && items.length > 1) {
-        // La canción elegida va primero; el resto, en orden aleatorio
-        const others = shuffle(
-          items.filter(other => other.id !== item.id)
-        ).slice(0, QUEUE_SIZE - 1);
-
-        const ids = [videoId, ...others.map(getVideoId)];
-        const queue = new URL("https://www.yout-ube.com/watch_videos");
-        queue.searchParams.set("video_ids", ids.join(","));
-        return queue.toString();
-      }
-
-      // Enlace simple en el formato que acepta el lanzador:
+      // Único formato que acepta el lanzador:
       // https://www.yout-ube.com/watch?v=ID
+      const videoId = url.searchParams.get("v") || item.id;
       const result = new URL("https://www.yout-ube.com/watch");
       result.searchParams.set("v", videoId);
+
       return result.toString();
     }
 
     function playSong(item) {
+      clearTimeout(nextTimer);
+
       try {
         const playbackUrl = getPlaybackUrl(item);
 
@@ -398,9 +371,26 @@
         $("featured-title").textContent = item.title || "Sin título";
         $("featured-by").textContent = item.by || "";
         $("featured-image").src = item.thumb || "";
-        $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
 
-        window.location.assign(playbackUrl);
+        // Pestaña con nombre: cada canción reutiliza la misma pestaña
+        const player = window.open(playbackUrl, PLAYER_TAB);
+
+        if (!player) {
+          $("status").textContent =
+            "El navegador bloqueó la ventana. Permite ventanas emergentes para esta página.";
+          return;
+        }
+
+        $("status").textContent = "Reproduciendo " +
+          (item.title || "canción") + " · la siguiente será aleatoria.";
+
+        // Al acabar la duración, abre otra canción distinta al azar
+        if (item.dur > 0) {
+          nextTimer = setTimeout(
+            playRandom,
+            (item.dur + EXTRA_SECONDS) * 1000
+          );
+        }
       } catch (error) {
         console.error(error);
         $("status").textContent = error.message;
