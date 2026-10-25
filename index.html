@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -396,9 +397,6 @@
 
     const $ = id => document.getElementById(id);
 
-    // Playlist real (la misma de update_list.py)
-    const PLAYLIST_ID = "PLPBl-I93G56Y";
-
     let items = [];
     let displayedItems = [];
     let currentItem = null;
@@ -407,8 +405,13 @@
       let originalUrl = item.url;
 
       if (!originalUrl && item.id) {
-        originalUrl = "https://www.youtube.com/watch?v=" +
-          encodeURIComponent(item.id);
+        const params = new URLSearchParams({
+          v: item.id,
+          list: "RD" + item.id,
+          start_radio: "1"
+        });
+
+        originalUrl = "https://www.youtube.com/watch?" + params.toString();
       }
 
       if (!originalUrl) {
@@ -430,20 +433,12 @@
         throw new Error("El dominio del enlace no es válido.");
       }
 
-      const videoId = url.searchParams.get("v") || item.id;
+      // Cambiamos únicamente el dominio, conservando v, list,
+      // start_radio y los demás parámetros del enlace.
+      url.protocol = "https:";
+      url.hostname = "www.yout-ube.com";
 
-      // Playlist real en lugar de la radio (list=RD...): al terminar,
-      // pasa a la siguiente canción de tu playlist y no a otras de fuera.
-      const result = new URL("https://www.yout-ube.com/watch");
-      result.searchParams.set("v", videoId);
-      result.searchParams.set("list", PLAYLIST_ID);
-
-      const position = items.findIndex(other => other.id === videoId) + 1;
-      if (position > 0) {
-        result.searchParams.set("index", String(position));
-      }
-
-      return result.toString();
+      return url.toString();
     }
 
     function playSong(item) {
@@ -618,17 +613,7 @@
         return;
       }
 
-      let item;
-
-      if (items.length === 1) {
-        item = items[0];
-      } else {
-        // Aleatoria, pero distinta de la que está sonando
-        do {
-          item = items[Math.floor(Math.random() * items.length)];
-        } while (item === currentItem);
-      }
-
+      const item = items[Math.floor(Math.random() * items.length)];
       playSong(item);
     }
 
@@ -641,7 +626,13 @@
       }
     });
 
-    $("next-button").addEventListener("click", playRandom);
+    $("next-button").addEventListener("click", () => {
+      if (!items.length) return;
+
+      const currentIndex = items.indexOf(currentItem);
+      const nextIndex = (currentIndex + 1) % items.length;
+      playSong(items[nextIndex]);
+    });
 
     loadPlaylist();
   </script>
