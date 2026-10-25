@@ -306,16 +306,28 @@
       <div class="logo">Mi<span>Tube</span></div>
 
       <div class="nav-title">Biblioteca</div>
-      <button class="nav-button active" id="all-button">♫ Todas las canciones</button>
-      <button class="nav-button" id="shuffle-button">⤨ Aleatorio</button>
-      <button class="nav-button" id="reload-button">↻ Recargar lista</button>
+      <button class="nav-button active" id="all-button">
+        ♫ Todas las canciones
+      </button>
+      <button class="nav-button" id="shuffle-button">
+        ⤨ Aleatorio
+      </button>
+      <button class="nav-button" id="reload-button">
+        ↻ Recargar lista
+      </button>
     </aside>
 
     <main>
       <div class="topbar">
-        <input id="search" type="search"
-          placeholder="Buscar canciones o artistas..." autocomplete="off">
-        <button class="button secondary" id="shuffle-top">Aleatorio</button>
+        <input
+          id="search"
+          type="search"
+          placeholder="Buscar canciones o artistas..."
+          autocomplete="off"
+        >
+        <button class="button secondary" id="shuffle-top">
+          Aleatorio
+        </button>
       </div>
 
       <h1 id="name">Mi música</h1>
@@ -328,8 +340,12 @@
             Selecciona una canción para abrirla.
           </div>
           <div class="hero-actions">
-            <button class="button" id="featured-play">▶ Reproducir</button>
-            <button class="button secondary" id="next-button">Siguiente ↗</button>
+            <button class="button" id="featured-play">
+              ▶ Reproducir
+            </button>
+            <button class="button secondary" id="next-button">
+              Siguiente ↗
+            </button>
           </div>
         </div>
         <img id="featured-image" alt="Portada de la canción">
@@ -349,13 +365,18 @@
       <div id="songs"></div>
 
       <footer>
-        MiTube · Reproductor de YouTube con selección aleatoria.
+        MiTube · Los enlaces se abren en el reproductor externo.
       </footer>
     </main>
   </div>
 
   <div id="player-layer">
-    <div id="player-frame"></div>
+    <iframe
+      id="player-frame"
+      allow="autoplay; fullscreen; encrypted-media"
+      allowfullscreen
+    ></iframe>
+
     <div id="player-controls">
       <button class="button" id="player-skip">⏭ Aleatorio</button>
       <button class="button secondary" id="player-close">✕ Volver</button>
@@ -370,116 +391,74 @@
     let items = [];
     let displayedItems = [];
     let currentItem = null;
-    let player = null;
-    let playerReady = false;
-    let pendingVideoId = null;
 
-    function getVideoId(item) {
-      if (item.id) return String(item.id);
+    function getPlaybackUrl(item) {
+      const params = new URLSearchParams();
 
       if (item.url) {
         try {
-          const url = new URL(item.url);
-          return url.searchParams.get("v") || "";
+          const source = new URL(item.url);
+          const videoId = source.searchParams.get("v");
+
+          if (videoId) params.set("v", videoId);
         } catch (error) {
-          console.error("URL de vídeo no válida", error);
+          console.warn("URL de canción no válida:", error);
         }
       }
 
-      return "";
-    }
+      if (!params.has("v") && item.id) {
+        params.set("v", item.id);
+      }
 
-    function updateFeatured(item) {
-      $("featured-title").textContent = item.title || "Sin título";
-      $("featured-by").textContent = item.by || "";
-      $("featured-image").src = item.thumb ||
-        `https://i.ytimg.com/vi/${encodeURIComponent(getVideoId(item))}/hqdefault.jpg`;
+      if (!params.has("v")) {
+        throw new Error("Esta canción no tiene un enlace válido.");
+      }
+
+      params.set("autoplay", "1");
+
+      return "https://www.yout-ube.com/watch?" + params.toString();
     }
 
     function playSong(item) {
-      const videoId = getVideoId(item);
+      try {
+        currentItem = item;
 
-      if (!videoId) {
-        $("status").textContent = "Esta canción no tiene un ID de YouTube válido.";
+        $("featured-title").textContent = item.title || "Sin título";
+        $("featured-by").textContent = item.by || "";
+        $("featured-image").src = item.thumb ||
+          `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
+
+        $("status").textContent =
+          "Abriendo " + (item.title || "canción") + "…";
+
+        $("player-frame").src = getPlaybackUrl(item);
+        $("player-layer").classList.add("open");
+
+        renderSongs();
+      } catch (error) {
+        console.error(error);
+        $("status").textContent = error.message;
+      }
+    }
+
+    function playRandom() {
+      if (!items.length) {
+        $("status").textContent = "No hay canciones cargadas.";
         return;
       }
 
-      currentItem = item;
-      pendingVideoId = videoId;
-      updateFeatured(item);
-      $("status").textContent = "Reproduciendo: " + item.title;
-      $("player-layer").classList.add("open");
+      let candidates = items;
 
-      if (playerReady && player) {
-        player.loadVideoById(videoId);
-      } else {
-        loadYouTubeAPI();
+      if (items.length > 1 && currentItem) {
+        candidates = items.filter(item => item.id !== currentItem.id);
       }
 
-      renderSongs();
-    }
+      if (!candidates.length) candidates = items;
 
-    function loadYouTubeAPI() {
-      if (window.YT && window.YT.Player) {
-        createPlayer();
-        return;
-      }
+      const item = candidates[Math.floor(Math.random() * candidates.length)];
 
-      if (document.getElementById("youtube-api")) return;
-
-      const script = document.createElement("script");
-      script.id = "youtube-api";
-      script.src = "https://www.youtube.com/iframe_api";
-      document.head.appendChild(script);
-    }
-
-    window.onYouTubeIframeAPIReady = function () {
-      createPlayer();
-    };
-
-    function createPlayer() {
-      if (player || !pendingVideoId) return;
-
-      player = new YT.Player("player-frame", {
-        width: "100%",
-        height: "100%",
-        videoId: pendingVideoId,
-        playerVars: {
-          autoplay: 1,
-          controls: 1,
-          playsinline: 1,
-          rel: 0
-        },
-        events: {
-          onReady: function (event) {
-            playerReady = true;
-
-            if (pendingVideoId) {
-              event.target.loadVideoById(pendingVideoId);
-            }
-          },
-          onStateChange: function (event) {
-            if (event.data === YT.PlayerState.ENDED) {
-              playRandom();
-            }
-          },
-          onError: function (event) {
-            $("status").textContent =
-              "YouTube no ha podido reproducir este vídeo. Código: " + event.data;
-          }
-        }
-      });
-    }
-
-    function shuffleItems(list) {
-      const shuffled = list.slice();
-
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-
-      return shuffled;
+      // Mismo comportamiento para el botón verde y los controles multimedia.
+      playSong(item);
     }
 
     function renderSongs() {
@@ -489,6 +468,7 @@
       displayedItems = items.filter(item => {
         const searchable = `${item.title || ""} ${item.by || ""}`
           .toLocaleLowerCase("es");
+
         return searchable.includes(query);
       });
 
@@ -520,7 +500,7 @@
         const row = document.createElement("article");
         row.className = "song";
 
-        if (currentItem && getVideoId(currentItem) === getVideoId(item)) {
+        if (currentItem && currentItem.id === item.id) {
           row.classList.add("active");
         }
 
@@ -533,7 +513,7 @@
         image.loading = "lazy";
         image.alt = "";
         image.src = item.thumb ||
-          `https://i.ytimg.com/vi/${encodeURIComponent(getVideoId(item))}/mqdefault.jpg`;
+          `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/mqdefault.jpg`;
 
         const info = document.createElement("div");
 
@@ -579,60 +559,55 @@
         }
 
         items = data.items
-          .filter(item => item && (item.id || item.url))
+          .filter(item => item && item.id)
           .map(item => ({
-            id: String(item.id || ""),
+            id: String(item.id),
             url: item.url || "",
             title: item.title || "Vídeo sin título",
             by: item.by || "",
             dur: Number(item.dur) || 0,
             views: item.views ?? null,
-            thumb: item.thumb || ""
+            thumb: item.thumb ||
+              `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`
           }));
 
         $("name").textContent = data.title || "MiTube";
         $("author").textContent = data.uploader || "Tu biblioteca musical";
 
         if (items.length) {
-          currentItem = null;
-          updateFeatured(items[0]);
+          $("featured-title").textContent = items[0].title;
+          $("featured-by").textContent = items[0].by;
+          $("featured-image").src = items[0].thumb;
+          currentItem = items[0];
         }
 
         renderSongs();
       } catch (error) {
         console.error("No se ha podido cargar la lista:", error);
+
         $("status").textContent =
           "No se ha podido cargar lista.json. Comprueba que está publicado junto a index.html.";
       }
     }
 
-    function playRandom() {
-      if (!items.length) {
-        $("status").textContent = "No hay canciones cargadas.";
-        return;
-      }
-
-      let candidates = items;
-
-      if (items.length > 1 && currentItem) {
-        const currentId = getVideoId(currentItem);
-        candidates = items.filter(item => getVideoId(item) !== currentId);
-      }
-
-      if (!candidates.length) candidates = items;
-
-      const item = candidates[Math.floor(Math.random() * candidates.length)];
-      playSong(item);
-    }
-
     function closePlayer() {
-      if (player && playerReady) {
-        player.stopVideo();
-      }
-
+      $("player-frame").src = "about:blank";
       $("player-layer").classList.remove("open");
     }
 
+    // Todos los botones de aleatorio ejecutan la misma función.
+    $("shuffle-button").addEventListener("click", playRandom);
+    $("shuffle-top").addEventListener("click", playRandom);
+    $("next-button").addEventListener("click", playRandom);
+    $("player-skip").addEventListener("click", playRandom);
+
+    $("featured-play").addEventListener("click", () => {
+      if (currentItem) {
+        playSong(currentItem);
+      }
+    });
+
+    $("player-close").addEventListener("click", closePlayer);
     $("search").addEventListener("input", renderSongs);
     $("sort").addEventListener("change", renderSongs);
     $("reload-button").addEventListener("click", loadPlaylist);
@@ -643,38 +618,39 @@
       renderSongs();
     });
 
-    $("shuffle-button").addEventListener("click", playRandom);
-    $("shuffle-top").addEventListener("click", playRandom);
-    $("next-button").addEventListener("click", playRandom);
-    $("player-skip").addEventListener("click", playRandom);
+    // Comando unificado para saltar a una canción aleatoria.
+    function skipRandom() {
+      playRandom();
+    }
 
-    $("featured-play").addEventListener("click", () => {
-      if (currentItem) playSong(currentItem);
-      else if (items.length) playSong(items[0]);
-    });
-
-    $("player-close").addEventListener("click", closePlayer);
-
+    // Siguiente pista: Mac, auriculares y controles compatibles.
     if ("mediaSession" in navigator) {
       try {
-        navigator.mediaSession.setActionHandler("nexttrack", playRandom);
+        navigator.mediaSession.setActionHandler("nexttrack", skipRandom);
       } catch (error) {
-        console.warn("Control multimedia no disponible.", error);
+        console.warn("El navegador no admite nexttrack:", error);
       }
     }
 
+    // Teclas multimedia y atajo N.
     document.addEventListener("keydown", event => {
-      const typing = event.target.matches("input, select, textarea");
+      const target = event.target;
+      const typing = target instanceof HTMLElement &&
+        (target.matches("input, select, textarea") || target.isContentEditable);
 
       if (
         event.key === "MediaTrackNext" ||
+        event.key === "MediaNextTrack" ||
+        event.keyCode === 176 ||
         (event.key.toLowerCase() === "n" && !typing)
       ) {
         event.preventDefault();
-        playRandom();
+        skipRandom();
       }
 
-      if (event.key === "Escape") closePlayer();
+      if (event.key === "Escape") {
+        closePlayer();
+      }
     });
 
     loadPlaylist();
