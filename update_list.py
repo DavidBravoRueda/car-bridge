@@ -1,10 +1,12 @@
-```python
+
 import json
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import urlencode
 
 PLAYLIST_URL = "https://www.youtube.com/playlist?list=PLPBl-I93G56Y"
+PLAYLIST_ID = "PLPBl-I93G56Y"
 OUTPUT_FILE = Path(__file__).with_name("lista.json")
 
 
@@ -43,34 +45,27 @@ def main():
         sys.exit(1)
 
     items = []
-    seen_ids = set()
 
     for entry in data.get("entries") or []:
         if not entry or not entry.get("id"):
             continue
 
-        video_id = str(entry["id"])
+        video_id = entry["id"]
 
-        # Evitar canciones duplicadas en la biblioteca.
-        if video_id in seen_ids:
-            continue
+        # Enlace individual con los parámetros de radio solicitados.
+        query = urlencode({
+            "v": video_id,
+            "list": "RD" + video_id,
+            "start_radio": "1",
+        })
 
-        seen_ids.add(video_id)
-
-        # Vídeo individual, sin radio ni cola automática.
-        youtube_url = (
-            "https://www.youtube.com/watch?v=" + video_id
-        )
+        youtube_url = "https://www.youtube.com/watch?" + query
 
         items.append({
             "id": video_id,
             "url": youtube_url,
             "title": entry.get("title") or "Vídeo sin título",
-            "by": (
-                entry.get("channel")
-                or entry.get("uploader")
-                or ""
-            ),
+            "by": entry.get("channel") or entry.get("uploader") or "",
             "dur": int(entry.get("duration") or 0),
             "views": entry.get("view_count"),
             "thumb": (
@@ -85,11 +80,7 @@ def main():
 
     output = {
         "title": data.get("title") or "MiTube",
-        "uploader": (
-            data.get("channel")
-            or data.get("uploader")
-            or ""
-        ),
+        "uploader": data.get("channel") or data.get("uploader") or "",
         "items": items,
     }
 
@@ -105,11 +96,8 @@ def main():
         print(f"ERROR al guardar la lista: {error}")
         sys.exit(1)
 
-    print(
-        f"Correcto: {len(items)} canciones guardadas en lista.json"
-    )
+    print(f"Correcto: {len(items)} vídeos guardados en lista.json")
 
 
 if __name__ == "__main__":
     main()
-```
