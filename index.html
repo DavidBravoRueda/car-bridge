@@ -317,14 +317,16 @@
 
     const $ = id => document.getElementById(id);
 
-    // Segundos extra tras la duración antes de pasar a la siguiente
-    const EXTRA_SECONDS = 3;
-    const PLAYER_TAB = "mitube-player";
+    // true = si el lanzador te devuelve a MiTube al acabar la canción,
+    // se abre otra aleatoria distinta automáticamente.
+    // false = comportamiento normal (solo abre cuando tú pulsas).
+    const AUTO_NEXT = false;
+
+    const STORAGE_KEY = "mitube-last-id";
 
     let items = [];
     let displayedItems = [];
     let currentItem = null;
-    let nextTimer = null;
 
     function getPlaybackUrl(item) {
       let originalUrl = item.url;
@@ -362,8 +364,6 @@
     }
 
     function playSong(item) {
-      clearTimeout(nextTimer);
-
       try {
         const playbackUrl = getPlaybackUrl(item);
 
@@ -371,26 +371,14 @@
         $("featured-title").textContent = item.title || "Sin título";
         $("featured-by").textContent = item.by || "";
         $("featured-image").src = item.thumb || "";
+        $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
 
-        // Pestaña con nombre: cada canción reutiliza la misma pestaña
-        const player = window.open(playbackUrl, PLAYER_TAB);
-
-        if (!player) {
-          $("status").textContent =
-            "El navegador bloqueó la ventana. Permite ventanas emergentes para esta página.";
-          return;
+        if (AUTO_NEXT) {
+          sessionStorage.setItem(STORAGE_KEY, item.id);
         }
 
-        $("status").textContent = "Reproduciendo " +
-          (item.title || "canción") + " · la siguiente será aleatoria.";
-
-        // Al acabar la duración, abre otra canción distinta al azar
-        if (item.dur > 0) {
-          nextTimer = setTimeout(
-            playRandom,
-            (item.dur + EXTRA_SECONDS) * 1000
-          );
-        }
+        // Misma pestaña, igual que en la versión original que funcionaba
+        window.location.assign(playbackUrl);
       } catch (error) {
         console.error(error);
         $("status").textContent = error.message;
@@ -532,6 +520,16 @@
         }
 
         renderSongs();
+
+        // Volvemos de una canción: pasa a otra aleatoria distinta
+        if (AUTO_NEXT) {
+          const lastId = sessionStorage.getItem(STORAGE_KEY);
+          if (lastId) {
+            sessionStorage.removeItem(STORAGE_KEY);
+            currentItem = items.find(item => item.id === lastId) || currentItem;
+            playRandom();
+          }
+        }
       } catch (error) {
         console.error("No se ha podido cargar la lista:", error);
         $("status").textContent =
