@@ -395,6 +395,8 @@
     "use strict";
 
     const $ = id => document.getElementById(id);
+
+    // Playlist real (la misma de update_list.py)
     const PLAYLIST_ID = "PLPBl-I93G56Y";
 
     let items = [];
@@ -402,12 +404,36 @@
     let currentItem = null;
 
     function getPlaybackUrl(item) {
-      const videoId = item.id;
+      let originalUrl = item.url;
 
-      if (!videoId) {
+      if (!originalUrl && item.id) {
+        originalUrl = "https://www.youtube.com/watch?v=" +
+          encodeURIComponent(item.id);
+      }
+
+      if (!originalUrl) {
         throw new Error("Esta canción no tiene un enlace válido.");
       }
 
+      const url = new URL(originalUrl);
+
+      const validHosts = [
+        "youtube.com",
+        "www.youtube.com",
+        "m.youtube.com",
+        "music.youtube.com",
+        "yout-ube.com",
+        "www.yout-ube.com"
+      ];
+
+      if (!validHosts.includes(url.hostname.toLowerCase())) {
+        throw new Error("El dominio del enlace no es válido.");
+      }
+
+      const videoId = url.searchParams.get("v") || item.id;
+
+      // Playlist real en lugar de la radio (list=RD...): al terminar,
+      // pasa a la siguiente canción de tu playlist y no a otras de fuera.
       const result = new URL("https://www.yout-ube.com/watch");
       result.searchParams.set("v", videoId);
       result.searchParams.set("list", PLAYLIST_ID);
@@ -422,21 +448,32 @@
 
     function playSong(item) {
       try {
-        const destination = getPlaybackUrl(item);
         currentItem = item;
 
         $("featured-title").textContent = item.title || "Sin título";
         $("featured-by").textContent = item.by || "";
         $("featured-image").src = item.thumb ||
           `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
-        $("status").textContent =
-          "Abriendo " + (item.title || "canción") + "…";
 
+        $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
+
+        const destination = getPlaybackUrl(item);
         window.location.assign(destination);
       } catch (error) {
         console.error(error);
         $("status").textContent = error.message;
       }
+    }
+
+    function shuffleItems(list) {
+      const shuffled = list.slice();
+
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+
+      return shuffled;
     }
 
     function renderSongs() {
@@ -552,10 +589,10 @@
         $("author").textContent = data.uploader || "Tu biblioteca musical";
 
         if (items.length) {
+          $("featured-title").textContent = items[0].title;
+          $("featured-by").textContent = items[0].by;
+          $("featured-image").src = items[0].thumb;
           currentItem = items[0];
-          $("featured-title").textContent = currentItem.title;
-          $("featured-by").textContent = currentItem.by;
-          $("featured-image").src = currentItem.thumb;
         }
 
         renderSongs();
@@ -566,44 +603,45 @@
       }
     }
 
-    function playRandom() {
-      if (!items.length) {
-        $("status").textContent = "No hay canciones cargadas.";
-        return;
-      }
-
-      let nextItem;
-
-      if (items.length === 1) {
-        nextItem = items[0];
-      } else {
-        do {
-          nextItem = items[Math.floor(Math.random() * items.length)];
-        } while (nextItem === currentItem);
-      }
-
-      playSong(nextItem);
-    }
-
     $("search").addEventListener("input", renderSongs);
     $("sort").addEventListener("change", renderSongs);
     $("reload-button").addEventListener("click", loadPlaylist);
-
     $("all-button").addEventListener("click", () => {
       $("search").value = "";
       $("sort").value = "default";
       renderSongs();
     });
 
+    function playRandom() {
+      if (!items.length) {
+        $("status").textContent = "No hay canciones cargadas.";
+        return;
+      }
+
+      let item;
+
+      if (items.length === 1) {
+        item = items[0];
+      } else {
+        // Aleatoria, pero distinta de la que está sonando
+        do {
+          item = items[Math.floor(Math.random() * items.length)];
+        } while (item === currentItem);
+      }
+
+      playSong(item);
+    }
+
     $("shuffle-button").addEventListener("click", playRandom);
     $("shuffle-top").addEventListener("click", playRandom);
-    $("next-button").addEventListener("click", playRandom);
 
     $("featured-play").addEventListener("click", () => {
       if (currentItem) {
         playSong(currentItem);
       }
     });
+
+    $("next-button").addEventListener("click", playRandom);
 
     loadPlaylist();
   </script>
