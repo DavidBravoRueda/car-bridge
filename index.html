@@ -19,7 +19,9 @@
       --border: #30313a;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -28,8 +30,13 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    button, input, select { font: inherit; }
-    button { cursor: pointer; }
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
 
     .layout {
       min-height: 100vh;
@@ -49,7 +56,9 @@
       font-weight: 800;
     }
 
-    .logo span { color: var(--accent); }
+    .logo span {
+      color: var(--accent);
+    }
 
     .nav-title {
       margin: 24px 10px 10px;
@@ -99,7 +108,9 @@
       outline: none;
     }
 
-    #search:focus { border-color: var(--accent); }
+    #search:focus {
+      border-color: var(--accent);
+    }
 
     .button {
       padding: 12px 15px;
@@ -121,11 +132,13 @@
       font-size: clamp(25px, 4vw, 36px);
     }
 
-    .muted { color: var(--muted); }
+    .muted {
+      color: var(--muted);
+    }
 
     .hero {
       display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(180px, .8fr);
+      grid-template-columns: minmax(0, 1.2fr) minmax(180px, 0.8fr);
       gap: 22px;
       align-items: center;
       margin: 26px 0 32px;
@@ -135,7 +148,10 @@
       border-radius: 18px;
     }
 
-    .hero h2 { margin: 0 0 10px; font-size: 24px; }
+    .hero h2 {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
 
     .hero img {
       display: block;
@@ -162,7 +178,10 @@
       margin-bottom: 16px;
     }
 
-    .section-header h2 { margin: 0; font-size: 22px; }
+    .section-header h2 {
+      margin: 0;
+      font-size: 22px;
+    }
 
     #sort {
       padding: 10px;
@@ -172,7 +191,10 @@
       border-radius: 8px;
     }
 
-    #songs { display: grid; gap: 8px; }
+    #songs {
+      display: grid;
+      gap: 8px;
+    }
 
     .song {
       display: grid;
@@ -185,8 +207,18 @@
       border-radius: 12px;
     }
 
-    .song:hover { background: var(--panel-hover); }
-    .number { color: var(--muted); text-align: center; }
+    .song:hover {
+      background: var(--panel-hover);
+    }
+
+    .song.active {
+      border-color: var(--accent);
+    }
+
+    .number {
+      color: var(--muted);
+      text-align: center;
+    }
 
     .thumbnail {
       width: 100px;
@@ -202,7 +234,10 @@
       overflow-wrap: anywhere;
     }
 
-    .song-artist { color: var(--muted); font-size: 13px; }
+    .song-artist {
+      color: var(--muted);
+      font-size: 13px;
+    }
 
     .play-button {
       min-width: 100px;
@@ -231,35 +266,70 @@
     }
 
     @media (max-width: 760px) {
-      .layout { grid-template-columns: 1fr; }
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
       aside {
         padding: 16px;
         border-right: 0;
         border-bottom: 1px solid var(--border);
       }
-      .logo { margin-bottom: 14px; }
-      .nav-title { display: none; }
-      .nav-button { width: auto; margin: 0 4px 0 0; }
-      main { padding: 18px; }
-      .hero { grid-template-columns: 1fr; }
-      .hero img { max-width: 440px; }
+
+      .logo {
+        margin-bottom: 14px;
+      }
+
+      .nav-title {
+        display: none;
+      }
+
+      .nav-button {
+        width: auto;
+        margin: 0 4px 0 0;
+      }
+
+      main {
+        padding: 18px;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .hero img {
+        max-width: 440px;
+      }
     }
 
     @media (max-width: 480px) {
-      .topbar { flex-wrap: wrap; }
-      #search { flex-basis: 100%; }
+      .topbar {
+        flex-wrap: wrap;
+      }
+
+      #search {
+        flex-basis: 100%;
+      }
+
       .song {
         grid-template-columns: 22px 76px minmax(0, 1fr);
         gap: 9px;
         padding: 9px;
       }
-      .thumbnail { width: 76px; }
+
+      .thumbnail {
+        width: 76px;
+      }
+
       .play-button {
         grid-column: 3;
         justify-self: start;
         min-width: 0;
       }
-      .number { font-size: 12px; }
+
+      .number {
+        font-size: 12px;
+      }
     }
   </style>
 </head>
@@ -268,6 +338,7 @@
   <div class="layout">
     <aside>
       <div class="logo">Mi<span>Tube</span></div>
+
       <div class="nav-title">Biblioteca</div>
       <button class="nav-button active" id="all-button">♫ Todas las canciones</button>
       <button class="nav-button" id="shuffle-button">⤨ Aleatorio</button>
@@ -276,9 +347,12 @@
 
     <main>
       <div class="topbar">
-        <input id="search" type="search"
+        <input
+          id="search"
+          type="search"
           placeholder="Buscar canciones o artistas..."
-          autocomplete="off">
+          autocomplete="off"
+        >
         <button class="button secondary" id="shuffle-top">Aleatorio</button>
       </div>
 
@@ -312,7 +386,9 @@
       <div id="status" role="status">Cargando canciones...</div>
       <div id="songs"></div>
 
-      <footer>MiTube · Enlaces al reproductor externo.</footer>
+      <footer>
+        MiTube · Los enlaces se abren en el reproductor externo.
+      </footer>
     </main>
   </div>
 
@@ -343,6 +419,7 @@
       }
 
       const url = new URL(originalUrl);
+
       const validHosts = [
         "youtube.com",
         "www.youtube.com",
@@ -356,7 +433,8 @@
         throw new Error("El dominio del enlace no es válido.");
       }
 
-      // Cambiar solo el dominio, sin perder los parámetros del vídeo.
+      // Cambiamos únicamente el dominio, conservando v, list,
+      // start_radio y los demás parámetros del enlace.
       url.protocol = "https:";
       url.hostname = "www.yout-ube.com";
 
@@ -366,36 +444,31 @@
     function playSong(item) {
       try {
         currentItem = item;
+
         $("featured-title").textContent = item.title || "Sin título";
         $("featured-by").textContent = item.by || "";
-        $("featured-image").src = item.thumb || "";
+        $("featured-image").src = item.thumb ||
+          `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
 
         $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
 
-        window.location.assign(getPlaybackUrl(item));
+        const destination = getPlaybackUrl(item);
+        window.location.assign(destination);
       } catch (error) {
         console.error(error);
         $("status").textContent = error.message;
       }
     }
 
-    function playRandom() {
-      if (!items.length) {
-        $("status").textContent = "No hay canciones cargadas.";
-        return;
+    function shuffleItems(list) {
+      const shuffled = list.slice();
+
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
 
-      let nextItem;
-
-      if (items.length === 1) {
-        nextItem = items[0];
-      } else {
-        do {
-          nextItem = items[Math.floor(Math.random() * items.length)];
-        } while (nextItem === currentItem);
-      }
-
-      playSong(nextItem);
+      return shuffled;
     }
 
     function renderSongs() {
@@ -403,19 +476,24 @@
       const sort = $("sort").value;
 
       displayedItems = items.filter(item => {
-        const text = `${item.title || ""} ${item.by || ""}`
+        const searchable = `${item.title || ""} ${item.by || ""}`
           .toLocaleLowerCase("es");
-        return text.includes(query);
+
+        return searchable.includes(query);
       });
 
       if (sort === "title") {
         displayedItems.sort((a, b) =>
-          (a.title || "").localeCompare(b.title || "", "es"));
+          (a.title || "").localeCompare(b.title || "", "es")
+        );
       } else if (sort === "artist") {
         displayedItems.sort((a, b) =>
-          (a.by || "").localeCompare(b.by || "", "es"));
+          (a.by || "").localeCompare(b.by || "", "es")
+        );
       } else if (sort === "duration") {
-        displayedItems.sort((a, b) => (a.dur || 0) - (b.dur || 0));
+        displayedItems.sort((a, b) =>
+          (a.dur || 0) - (b.dur || 0)
+        );
       }
 
       const container = $("songs");
@@ -447,6 +525,7 @@
           `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/mqdefault.jpg`;
 
         const info = document.createElement("div");
+
         const title = document.createElement("div");
         title.className = "song-title";
         title.textContent = item.title || "Vídeo sin título";
@@ -505,10 +584,10 @@
         $("author").textContent = data.uploader || "Tu biblioteca musical";
 
         if (items.length) {
+          $("featured-title").textContent = items[0].title;
+          $("featured-by").textContent = items[0].by;
+          $("featured-image").src = items[0].thumb;
           currentItem = items[0];
-          $("featured-title").textContent = currentItem.title;
-          $("featured-by").textContent = currentItem.by;
-          $("featured-image").src = currentItem.thumb;
         }
 
         renderSongs();
@@ -519,26 +598,40 @@
       }
     }
 
-    function shuffleAndPlay() {
-      playRandom();
-    }
-
     $("search").addEventListener("input", renderSongs);
     $("sort").addEventListener("change", renderSongs);
     $("reload-button").addEventListener("click", loadPlaylist);
-
     $("all-button").addEventListener("click", () => {
       $("search").value = "";
       $("sort").value = "default";
       renderSongs();
     });
 
-    $("shuffle-button").addEventListener("click", shuffleAndPlay);
-    $("shuffle-top").addEventListener("click", shuffleAndPlay);
-    $("next-button").addEventListener("click", playRandom);
+    function playRandom() {
+      if (!items.length) {
+        $("status").textContent = "No hay canciones cargadas.";
+        return;
+      }
+
+      const item = items[Math.floor(Math.random() * items.length)];
+      playSong(item);
+    }
+
+    $("shuffle-button").addEventListener("click", playRandom);
+    $("shuffle-top").addEventListener("click", playRandom);
 
     $("featured-play").addEventListener("click", () => {
-      if (currentItem) playSong(currentItem);
+      if (currentItem) {
+        playSong(currentItem);
+      }
+    });
+
+    $("next-button").addEventListener("click", () => {
+      if (!items.length) return;
+
+      const currentIndex = items.indexOf(currentItem);
+      const nextIndex = (currentIndex + 1) % items.length;
+      playSong(items[nextIndex]);
     });
 
     loadPlaylist();
