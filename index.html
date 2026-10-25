@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101114">
   <title>MiTube</title>
+
   <style>
     :root {
       color-scheme: dark;
@@ -220,6 +222,21 @@
       color: var(--muted);
     }
 
+    #player-container {
+      display: none;
+      margin: 20px 0;
+      overflow: hidden;
+      border-radius: 12px;
+      background: #000;
+    }
+
+    #player {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 0;
+    }
+
     footer {
       padding: 28px 0 10px;
       color: var(--muted);
@@ -285,7 +302,7 @@
         <div>
           <h2 id="featured-title">Tu música, a un clic</h2>
           <div class="muted" id="featured-by">
-            Selecciona una canción para abrirla.
+            Selecciona una canción para reproducirla.
           </div>
           <div class="hero-actions">
             <button class="button" id="featured-play">▶ Reproducir</button>
@@ -294,6 +311,16 @@
         </div>
         <img id="featured-image" alt="Portada de la canción">
       </section>
+
+      <div id="player-container">
+        <iframe
+          id="player"
+          title="Reproductor de música"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowfullscreen
+          referrerpolicy="strict-origin-when-cross-origin">
+        </iframe>
+      </div>
 
       <div class="section-header">
         <h2>Lista de canciones</h2>
@@ -308,7 +335,7 @@
       <div id="status" role="status">Cargando canciones...</div>
       <div id="songs"></div>
 
-      <footer>MiTube · Enlaces al reproductor externo.</footer>
+      <footer>MiTube · Reproducción y selección aleatoria.</footer>
     </main>
   </div>
 
@@ -320,74 +347,85 @@
     let items = [];
     let displayedItems = [];
     let currentItem = null;
+    let playedIds = new Set();
+    let playerCheckTimer = null;
 
-    function getPlaybackUrl(item) {
-      let originalUrl = item.url;
+    function getVideoId(item) {
+      if (item.id) return String(item.id);
 
-      if (!originalUrl && item.id) {
-        originalUrl = "https://www.youtube.com/watch?v=" +
-          encodeURIComponent(item.id);
+      if (item.url) {
+        try {
+          return new URL(item.url).searchParams.get("v");
+        } catch (_) {}
       }
 
-      if (!originalUrl) {
-        throw new Error("Esta canción no tiene un enlace válido.");
+      return null;
+    }
+
+    function getRandomSong() {
+      if (!items.length) return null;
+
+      // Evita repetir canciones hasta agotar las disponibles.
+      let candidates = items.filter(item =>
+        getVideoId(item) &&
+        !playedIds.has(getVideoId(item))
+      );
+
+      if (!candidates.length) {
+        playedIds.clear();
+
+        candidates = items.filter(item =>
+          getVideoId(item) &&
+          getVideoId(item) !== getVideoId(currentItem)
+        );
       }
 
-      const url = new URL(originalUrl);
-      const validHosts = [
-        "youtube.com",
-        "www.youtube.com",
-        "m.youtube.com",
-        "music.youtube.com",
-        "yout-ube.com",
-        "www.yout-ube.com"
-      ];
+      if (!candidates.length) return items[0];
 
-      if (!validHosts.includes(url.hostname.toLowerCase())) {
-        throw new Error("El dominio del enlace no es válido.");
-      }
-
-      // Abrir el vídeo individual, sin activar una radio externa.
-      url.searchParams.delete("list");
-      url.searchParams.delete("start_radio");
-      url.protocol = "https:";
-      url.hostname = "www.yout-ube.com";
-
-      return url.toString();
+      return candidates[Math.floor(Math.random() * candidates.length)];
     }
 
     function playSong(item) {
-      try {
-        currentItem = item;
-        $("featured-title").textContent = item.title || "Sin título";
-        $("featured-by").textContent = item.by || "";
-        $("featured-image").src = item.thumb || "";
-        $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
+      const id = getVideoId(item);
 
-        window.location.assign(getPlaybackUrl(item));
-      } catch (error) {
-        console.error(error);
-        $("status").textContent = error.message;
+      if (!id) {
+        $("status").textContent = "Esta canción no tiene un ID válido.";
+        return;
       }
+
+      currentItem = item;
+      playedIds.add(id);
+
+      $("featured-title").textContent = item.title || "Sin título";
+      $("featured-by").textContent = item.by || "";
+      $("featured-image").src = item.thumb || "";
+      $("status").textContent = "Reproduciendo: " + item.title;
+      $("player-container").style.display = "block";
+
+      /*
+       * Se conserva el motor solicitado yout-ube.com.
+       * La detección del final depende de que ese servicio
+       * admita un evento de finalización o una API compatible.
+       */
+      $("player").src =
+        "https://www.yout-ube.com/embed/" +
+        encodeURIComponent(id) +
+        "?autoplay=1";
+
+      clearInterval(playerCheckTimer);
+
+      renderSongs();
     }
 
     function playRandom() {
-      if (!items.length) {
+      const next = getRandomSong();
+
+      if (!next) {
         $("status").textContent = "No hay canciones cargadas.";
         return;
       }
 
-      let nextItem;
-
-      if (items.length === 1) {
-        nextItem = items[0];
-      } else {
-        do {
-          nextItem = items[Math.floor(Math.random() * items.length)];
-        } while (nextItem.id === currentItem?.id);
-      }
-
-      playSong(nextItem);
+      playSong(next);
     }
 
     function renderSongs() {
@@ -395,7 +433,7 @@
       const sort = $("sort").value;
 
       displayedItems = items.filter(item =>
-        ${item.title || ""} ${item.by || ""}
+        `${item.title || ""} ${item.by || ""}`
           .toLocaleLowerCase("es")
           .includes(query)
       );
@@ -419,9 +457,6 @@
         return;
       }
 
-      $("status").textContent =
-        ${displayedItems.length} de ${items.length} canciones;
-
       const fragment = document.createDocumentFragment();
 
       displayedItems.forEach((item, index) => {
@@ -437,7 +472,7 @@
         image.loading = "lazy";
         image.alt = "";
         image.src = item.thumb ||
-          https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/mqdefault.jpg;
+          `https://i.ytimg.com/vi/${encodeURIComponent(getVideoId(item) || "")}/mqdefault.jpg`;
 
         const info = document.createElement("div");
 
@@ -454,7 +489,11 @@
         const button = document.createElement("button");
         button.className = "play-button";
         button.type = "button";
-        button.textContent = "▶ Reproducir";
+        button.textContent =
+          getVideoId(item) === getVideoId(currentItem)
+            ? "▶ Reproduciendo"
+            : "▶ Reproducir";
+
         button.addEventListener("click", () => playSong(item));
 
         row.append(number, image, info, button);
@@ -462,6 +501,8 @@
       });
 
       container.appendChild(fragment);
+      $("status").textContent =
+        `${displayedItems.length} de ${items.length} canciones`;
     }
 
     async function loadPlaylist() {
@@ -473,7 +514,7 @@
         });
 
         if (!response.ok) {
-          throw new Error(Error HTTP ${response.status});
+          throw new Error(`Error HTTP ${response.status}`);
         }
 
         const data = await response.json();
@@ -483,31 +524,33 @@
         }
 
         items = data.items
-          .filter(item => item && item.id)
+          .filter(item => item && getVideoId(item))
           .map(item => ({
-            id: String(item.id),
+            id: getVideoId(item),
             url: item.url || "",
             title: item.title || "Vídeo sin título",
             by: item.by || "",
             dur: Number(item.dur) || 0,
             views: item.views ?? null,
             thumb: item.thumb ||
-              https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg
+              `https://i.ytimg.com/vi/${encodeURIComponent(getVideoId(item))}/hqdefault.jpg`
           }));
+
+        playedIds.clear();
 
         $("name").textContent = data.title || "MiTube";
         $("author").textContent = data.uploader || "Tu biblioteca musical";
 
         if (items.length) {
-          currentItem = items[0];
-          $("featured-title").textContent = currentItem.title;
-          $("featured-by").textContent = currentItem.by;
-          $("featured-image").src = currentItem.thumb;
+          currentItem = null;
+          $("featured-title").textContent = "Tu música, a un clic";
+          $("featured-by").textContent = `${items.length} canciones disponibles`;
+          $("featured-image").src = items[0].thumb;
         }
 
         renderSongs();
       } catch (error) {
-        console.error("No se ha podido cargar la lista:", error);
+        console.error("Error al cargar la lista:", error);
         $("status").textContent =
           "No se ha podido cargar lista.json. Comprueba que está publicado junto a index.html.";
       }
@@ -528,10 +571,15 @@
     $("next-button").addEventListener("click", playRandom);
 
     $("featured-play").addEventListener("click", () => {
-      if (currentItem) playSong(currentItem);
+      if (currentItem) {
+        playSong(currentItem);
+      } else {
+        playRandom();
+      }
     });
 
     loadPlaylist();
   </script>
 </body>
 </html>
+```
