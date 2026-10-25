@@ -322,11 +322,25 @@
     // false = comportamiento normal (solo abre cuando tú pulsas).
     const AUTO_NEXT = false;
 
+    // Cuántas canciones aleatorias se añaden a la cola del lanzador
+    // tras la canción elegida (para que al acabar pase a otra distinta).
+    const QUEUE_SIZE = 49;
+
     const STORAGE_KEY = "mitube-last-id";
 
     let items = [];
     let displayedItems = [];
     let currentItem = null;
+
+    // Mezcla una lista (Fisher-Yates) sin modificar la original
+    function shuffled(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
 
     function getPlaybackUrl(item) {
       let originalUrl = item.url;
@@ -354,13 +368,23 @@
         throw new Error("El dominio del enlace no es válido.");
       }
 
-      // Único formato que acepta el lanzador:
-      // https://www.yout-ube.com/watch?v=ID
+      // Formato del lanzador: https://www.yout-ube.com/watch?v=ID
       const videoId = url.searchParams.get("v") || item.id;
-      const result = new URL("https://www.yout-ube.com/watch");
-      result.searchParams.set("v", videoId);
 
-      return result.toString();
+      // Cola aleatoria con otras canciones distintas de la actual:
+      // al terminar la canción, el reproductor pasa a la siguiente de la cola.
+      const queue = shuffled(items.filter(i => i.id !== videoId))
+        .slice(0, QUEUE_SIZE)
+        .map(i => i.id);
+
+      let result = "https://www.yout-ube.com/watch?v=" +
+        encodeURIComponent(videoId);
+
+      if (queue.length) {
+        result += "&playlist=" + queue.join(",");
+      }
+
+      return result;
     }
 
     function playSong(item) {
