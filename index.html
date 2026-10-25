@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -18,9 +19,7 @@
       --border: #30313a;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -29,13 +28,8 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    button, input, select {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
 
     .layout {
       min-height: 100vh;
@@ -55,9 +49,7 @@
       font-weight: 800;
     }
 
-    .logo span {
-      color: var(--accent);
-    }
+    .logo span { color: var(--accent); }
 
     .nav-title {
       margin: 24px 10px 10px;
@@ -80,9 +72,7 @@
     }
 
     .nav-button:hover,
-    .nav-button.active {
-      background: var(--panel-hover);
-    }
+    .nav-button.active { background: var(--panel-hover); }
 
     main {
       min-width: 0;
@@ -107,9 +97,7 @@
       outline: none;
     }
 
-    #search:focus {
-      border-color: var(--accent);
-    }
+    #search:focus { border-color: var(--accent); }
 
     .button {
       padding: 12px 15px;
@@ -131,9 +119,7 @@
       font-size: clamp(25px, 4vw, 36px);
     }
 
-    .muted {
-      color: var(--muted);
-    }
+    .muted { color: var(--muted); }
 
     .hero {
       display: grid;
@@ -147,10 +133,7 @@
       border-radius: 18px;
     }
 
-    .hero h2 {
-      margin: 0 0 10px;
-      font-size: 24px;
-    }
+    .hero h2 { margin: 0 0 10px; font-size: 24px; }
 
     .hero img {
       display: block;
@@ -177,10 +160,7 @@
       margin-bottom: 16px;
     }
 
-    .section-header h2 {
-      margin: 0;
-      font-size: 22px;
-    }
+    .section-header h2 { margin: 0; font-size: 22px; }
 
     #sort {
       padding: 10px;
@@ -190,10 +170,7 @@
       border-radius: 8px;
     }
 
-    #songs {
-      display: grid;
-      gap: 8px;
-    }
+    #songs { display: grid; gap: 8px; }
 
     .song {
       display: grid;
@@ -206,18 +183,10 @@
       border-radius: 12px;
     }
 
-    .song:hover {
-      background: var(--panel-hover);
-    }
+    .song:hover { background: var(--panel-hover); }
+    .song.active { border-color: var(--accent); }
 
-    .song.active {
-      border-color: var(--accent);
-    }
-
-    .number {
-      color: var(--muted);
-      text-align: center;
-    }
+    .number { color: var(--muted); text-align: center; }
 
     .thumbnail {
       width: 100px;
@@ -233,10 +202,7 @@
       overflow-wrap: anywhere;
     }
 
-    .song-artist {
-      color: var(--muted);
-      font-size: 13px;
-    }
+    .song-artist { color: var(--muted); font-size: 13px; }
 
     .play-button {
       min-width: 100px;
@@ -272,9 +238,7 @@
       background: #000;
     }
 
-    #player-layer.open {
-      display: block;
-    }
+    #player-layer.open { display: block; }
 
     #player-frame {
       width: 100%;
@@ -292,9 +256,7 @@
     }
 
     @media (max-width: 760px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
+      .layout { grid-template-columns: 1fr; }
 
       aside {
         padding: 16px;
@@ -302,40 +264,22 @@
         border-bottom: 1px solid var(--border);
       }
 
-      .logo {
-        margin-bottom: 14px;
-      }
-
-      .nav-title {
-        display: none;
-      }
+      .logo { margin-bottom: 14px; }
+      .nav-title { display: none; }
 
       .nav-button {
         width: auto;
         margin: 0 4px 0 0;
       }
 
-      main {
-        padding: 18px;
-      }
-
-      .hero {
-        grid-template-columns: 1fr;
-      }
-
-      .hero img {
-        max-width: 440px;
-      }
+      main { padding: 18px; }
+      .hero { grid-template-columns: 1fr; }
+      .hero img { max-width: 440px; }
     }
 
     @media (max-width: 480px) {
-      .topbar {
-        flex-wrap: wrap;
-      }
-
-      #search {
-        flex-basis: 100%;
-      }
+      .topbar { flex-wrap: wrap; }
+      #search { flex-basis: 100%; }
 
       .song {
         grid-template-columns: 22px 76px minmax(0, 1fr);
@@ -343,9 +287,7 @@
         padding: 9px;
       }
 
-      .thumbnail {
-        width: 76px;
-      }
+      .thumbnail { width: 76px; }
 
       .play-button {
         grid-column: 3;
@@ -353,9 +295,7 @@
         min-width: 0;
       }
 
-      .number {
-        font-size: 12px;
-      }
+      .number { font-size: 12px; }
     }
   </style>
 </head>
@@ -373,12 +313,8 @@
 
     <main>
       <div class="topbar">
-        <input
-          id="search"
-          type="search"
-          placeholder="Buscar canciones o artistas..."
-          autocomplete="off"
-        >
+        <input id="search" type="search"
+          placeholder="Buscar canciones o artistas..." autocomplete="off">
         <button class="button secondary" id="shuffle-top">Aleatorio</button>
       </div>
 
@@ -413,13 +349,13 @@
       <div id="songs"></div>
 
       <footer>
-        MiTube · Los enlaces se abren en el reproductor externo.
+        MiTube · Reproductor de YouTube con selección aleatoria.
       </footer>
     </main>
   </div>
 
   <div id="player-layer">
-    <iframe id="player-frame" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+    <div id="player-frame"></div>
     <div id="player-controls">
       <button class="button" id="player-skip">⏭ Aleatorio</button>
       <button class="button secondary" id="player-close">✕ Volver</button>
@@ -434,45 +370,105 @@
     let items = [];
     let displayedItems = [];
     let currentItem = null;
+    let player = null;
+    let playerReady = false;
+    let pendingVideoId = null;
 
-    function getPlaybackUrl(item) {
-      const params = new URLSearchParams();
+    function getVideoId(item) {
+      if (item.id) return String(item.id);
 
       if (item.url) {
-        const source = new URL(item.url);
-        const v = source.searchParams.get("v");
-        if (v) params.set("v", v);
+        try {
+          const url = new URL(item.url);
+          return url.searchParams.get("v") || "";
+        } catch (error) {
+          console.error("URL de vídeo no válida", error);
+        }
       }
 
-      if (!params.has("v") && item.id) params.set("v", item.id);
+      return "";
+    }
 
-      if (!params.has("v")) {
-        throw new Error("Esta canción no tiene un enlace válido.");
-      }
-
-      params.set("autoplay", "1");
-
-      return "https://www.yout-ube.com/watch?" + params.toString();
+    function updateFeatured(item) {
+      $("featured-title").textContent = item.title || "Sin título";
+      $("featured-by").textContent = item.by || "";
+      $("featured-image").src = item.thumb ||
+        `https://i.ytimg.com/vi/${encodeURIComponent(getVideoId(item))}/hqdefault.jpg`;
     }
 
     function playSong(item) {
-      try {
-        currentItem = item;
+      const videoId = getVideoId(item);
 
-        $("featured-title").textContent = item.title || "Sin título";
-        $("featured-by").textContent = item.by || "";
-        $("featured-image").src = item.thumb ||
-          `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
-
-        $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
-
-        const destination = getPlaybackUrl(item);
-        $("player-frame").src = destination;
-        $("player-layer").classList.add("open");
-      } catch (error) {
-        console.error(error);
-        $("status").textContent = error.message;
+      if (!videoId) {
+        $("status").textContent = "Esta canción no tiene un ID de YouTube válido.";
+        return;
       }
+
+      currentItem = item;
+      pendingVideoId = videoId;
+      updateFeatured(item);
+      $("status").textContent = "Reproduciendo: " + item.title;
+      $("player-layer").classList.add("open");
+
+      if (playerReady && player) {
+        player.loadVideoById(videoId);
+      } else {
+        loadYouTubeAPI();
+      }
+
+      renderSongs();
+    }
+
+    function loadYouTubeAPI() {
+      if (window.YT && window.YT.Player) {
+        createPlayer();
+        return;
+      }
+
+      if (document.getElementById("youtube-api")) return;
+
+      const script = document.createElement("script");
+      script.id = "youtube-api";
+      script.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(script);
+    }
+
+    window.onYouTubeIframeAPIReady = function () {
+      createPlayer();
+    };
+
+    function createPlayer() {
+      if (player || !pendingVideoId) return;
+
+      player = new YT.Player("player-frame", {
+        width: "100%",
+        height: "100%",
+        videoId: pendingVideoId,
+        playerVars: {
+          autoplay: 1,
+          controls: 1,
+          playsinline: 1,
+          rel: 0
+        },
+        events: {
+          onReady: function (event) {
+            playerReady = true;
+
+            if (pendingVideoId) {
+              event.target.loadVideoById(pendingVideoId);
+            }
+          },
+          onStateChange: function (event) {
+            if (event.data === YT.PlayerState.ENDED) {
+              playRandom();
+            }
+          },
+          onError: function (event) {
+            $("status").textContent =
+              "YouTube no ha podido reproducir este vídeo. Código: " + event.data;
+          }
+        }
+      });
     }
 
     function shuffleItems(list) {
@@ -493,22 +489,18 @@
       displayedItems = items.filter(item => {
         const searchable = `${item.title || ""} ${item.by || ""}`
           .toLocaleLowerCase("es");
-
         return searchable.includes(query);
       });
 
       if (sort === "title") {
         displayedItems.sort((a, b) =>
-          (a.title || "").localeCompare(b.title || "", "es")
-        );
+          (a.title || "").localeCompare(b.title || "", "es"));
       } else if (sort === "artist") {
         displayedItems.sort((a, b) =>
-          (a.by || "").localeCompare(b.by || "", "es")
-        );
+          (a.by || "").localeCompare(b.by || "", "es"));
       } else if (sort === "duration") {
         displayedItems.sort((a, b) =>
-          (a.dur || 0) - (b.dur || 0)
-        );
+          (a.dur || 0) - (b.dur || 0));
       }
 
       const container = $("songs");
@@ -528,6 +520,10 @@
         const row = document.createElement("article");
         row.className = "song";
 
+        if (currentItem && getVideoId(currentItem) === getVideoId(item)) {
+          row.classList.add("active");
+        }
+
         const number = document.createElement("div");
         number.className = "number";
         number.textContent = String(index + 1);
@@ -537,7 +533,7 @@
         image.loading = "lazy";
         image.alt = "";
         image.src = item.thumb ||
-          `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/mqdefault.jpg`;
+          `https://i.ytimg.com/vi/${encodeURIComponent(getVideoId(item))}/mqdefault.jpg`;
 
         const info = document.createElement("div");
 
@@ -583,26 +579,23 @@
         }
 
         items = data.items
-          .filter(item => item && item.id)
+          .filter(item => item && (item.id || item.url))
           .map(item => ({
-            id: String(item.id),
+            id: String(item.id || ""),
             url: item.url || "",
             title: item.title || "Vídeo sin título",
             by: item.by || "",
             dur: Number(item.dur) || 0,
             views: item.views ?? null,
-            thumb: item.thumb ||
-              `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`
+            thumb: item.thumb || ""
           }));
 
         $("name").textContent = data.title || "MiTube";
         $("author").textContent = data.uploader || "Tu biblioteca musical";
 
         if (items.length) {
-          $("featured-title").textContent = items[0].title;
-          $("featured-by").textContent = items[0].by;
-          $("featured-image").src = items[0].thumb;
-          currentItem = items[0];
+          currentItem = null;
+          updateFeatured(items[0]);
         }
 
         renderSongs();
@@ -613,58 +606,79 @@
       }
     }
 
-    $("search").addEventListener("input", renderSongs);
-    $("sort").addEventListener("change", renderSongs);
-    $("reload-button").addEventListener("click", loadPlaylist);
-    $("all-button").addEventListener("click", () => {
-      $("search").value = "";
-      $("sort").value = "default";
-      renderSongs();
-    });
-
     function playRandom() {
       if (!items.length) {
         $("status").textContent = "No hay canciones cargadas.";
         return;
       }
 
-      const item = items[Math.floor(Math.random() * items.length)];
+      let candidates = items;
+
+      if (items.length > 1 && currentItem) {
+        const currentId = getVideoId(currentItem);
+        candidates = items.filter(item => getVideoId(item) !== currentId);
+      }
+
+      if (!candidates.length) candidates = items;
+
+      const item = candidates[Math.floor(Math.random() * candidates.length)];
       playSong(item);
     }
 
-    $("shuffle-button").addEventListener("click", playRandom);
-    $("shuffle-top").addEventListener("click", playRandom);
-
-    $("featured-play").addEventListener("click", () => {
-      if (currentItem) {
-        playSong(currentItem);
+    function closePlayer() {
+      if (player && playerReady) {
+        player.stopVideo();
       }
-    });
 
-    $("next-button").addEventListener("click", playRandom);
-
-    $("player-skip").addEventListener("click", playRandom);
-    $("player-close").addEventListener("click", () => {
-      $("player-frame").src = "about:blank";
       $("player-layer").classList.remove("open");
-    });
-
-    if ("mediaSession" in navigator) {
-      navigator.mediaSession.setActionHandler("nexttrack", () => {
-        $("player-skip").click();
-      });
     }
 
-    document.addEventListener("keydown", e => {
-      const typing = e.target.matches("input, select");
+    $("search").addEventListener("input", renderSongs);
+    $("sort").addEventListener("change", renderSongs);
+    $("reload-button").addEventListener("click", loadPlaylist);
 
-      if (e.key === "MediaTrackNext" || (e.key.toLowerCase() === "n" && !typing)) {
-        e.preventDefault();
-        $("player-skip").click();
+    $("all-button").addEventListener("click", () => {
+      $("search").value = "";
+      $("sort").value = "default";
+      renderSongs();
+    });
+
+    $("shuffle-button").addEventListener("click", playRandom);
+    $("shuffle-top").addEventListener("click", playRandom);
+    $("next-button").addEventListener("click", playRandom);
+    $("player-skip").addEventListener("click", playRandom);
+
+    $("featured-play").addEventListener("click", () => {
+      if (currentItem) playSong(currentItem);
+      else if (items.length) playSong(items[0]);
+    });
+
+    $("player-close").addEventListener("click", closePlayer);
+
+    if ("mediaSession" in navigator) {
+      try {
+        navigator.mediaSession.setActionHandler("nexttrack", playRandom);
+      } catch (error) {
+        console.warn("Control multimedia no disponible.", error);
       }
+    }
+
+    document.addEventListener("keydown", event => {
+      const typing = event.target.matches("input, select, textarea");
+
+      if (
+        event.key === "MediaTrackNext" ||
+        (event.key.toLowerCase() === "n" && !typing)
+      ) {
+        event.preventDefault();
+        playRandom();
+      }
+
+      if (event.key === "Escape") closePlayer();
     });
 
     loadPlaylist();
   </script>
 </body>
 </html>
+```
