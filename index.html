@@ -396,21 +396,22 @@
 
     const $ = id => document.getElementById(id);
 
+    // Segundos extra tras la duración antes de pasar a la siguiente
+    const EXTRA_SECONDS = 3;
+    const PLAYER_TAB = "mitube-player";
+
     let items = [];
     let displayedItems = [];
     let currentItem = null;
+    let playerWindow = null;
+    let nextTimer = null;
 
     function getPlaybackUrl(item) {
       let originalUrl = item.url;
 
       if (!originalUrl && item.id) {
-        const params = new URLSearchParams({
-          v: item.id,
-          list: "RD" + item.id,
-          start_radio: "1"
-        });
-
-        originalUrl = "https://www.youtube.com/watch?" + params.toString();
+        originalUrl = "https://www.youtube.com/watch?v=" +
+          encodeURIComponent(item.id);
       }
 
       if (!originalUrl) {
@@ -432,16 +433,31 @@
         throw new Error("El dominio del enlace no es válido.");
       }
 
-      // Cambiamos únicamente el dominio, conservando v, list,
-      // start_radio y los demás parámetros del enlace.
-      url.protocol = "https:";
-      url.hostname = "www.yout-ube.com";
+      // Solo v=ID, sin mix (list=RD): así el reproductor no se va
+      // a canciones de fuera de tu lista.
+      const videoId = url.searchParams.get("v") || item.id;
+      const result = new URL("https://www.yout-ube.com/watch");
+      result.searchParams.set("v", videoId);
 
-      return url.toString();
+      return result.toString();
+    }
+
+    function openInPlayer(destination) {
+      if (playerWindow && !playerWindow.closed) {
+        playerWindow.location.href = destination;
+        return true;
+      }
+
+      playerWindow = window.open(destination, PLAYER_TAB);
+      return Boolean(playerWindow);
     }
 
     function playSong(item) {
+      clearTimeout(nextTimer);
+
       try {
+        const destination = getPlaybackUrl(item);
+
         currentItem = item;
 
         $("featured-title").textContent = item.title || "Sin título";
@@ -449,10 +465,23 @@
         $("featured-image").src = item.thumb ||
           `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
 
-        $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
+        if (!openInPlayer(destination)) {
+          $("status").textContent =
+            "El navegador bloqueó la pestaña. Permite ventanas emergentes para esta página.";
+          return;
+        }
 
-        const destination = getPlaybackUrl(item);
-        window.location.assign(destination);
+        $("status").textContent =
+          "Reproduciendo " + (item.title || "canción") +
+          " · después pasará a otra aleatoria.";
+
+        // Al acabar la canción, pasa sola a otra aleatoria
+        if (item.dur > 0) {
+          nextTimer = setTimeout(
+            playRandom,
+            (item.dur + EXTRA_SECONDS) * 1000
+          );
+        }
       } catch (error) {
         console.error(error);
         $("status").textContent = error.message;
@@ -635,7 +664,6 @@
       }
     });
 
-    // Siguiente: antes avanzaba en orden de lista, ahora es aleatoria
     $("next-button").addEventListener("click", playRandom);
 
     loadPlaylist();
