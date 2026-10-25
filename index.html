@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -320,41 +321,11 @@
 
     const $ = id => document.getElementById(id);
 
-    // true  = cola aleatoria: la canción elegida + otras mezcladas al azar
-    //         (usa https://www.yout-ube.com/watch_videos?video_ids=...)
-    // false = comportamiento anterior (el que pasaba a la siguiente en orden)
-    const RANDOM_QUEUE = true;
-
-    // Máximo de canciones en la cola (YouTube admite hasta 50)
-    const QUEUE_SIZE = 50;
-
     let items = [];
     let displayedItems = [];
     let currentItem = null;
 
-    // Mezcla una lista (Fisher-Yates) sin modificar la original
-    function shuffled(array) {
-      const copy = [...array];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-      return copy;
-    }
-
     function getPlaybackUrl(item) {
-      // Cola aleatoria: la canción pulsada primero y el resto mezclado
-      if (RANDOM_QUEUE && item.id) {
-        const others = shuffled(items.filter(i => i.id !== item.id))
-          .slice(0, QUEUE_SIZE - 1)
-          .map(i => i.id);
-
-        const ids = [item.id, ...others];
-
-        return "https://www.yout-ube.com/watch_videos?video_ids=" +
-          ids.map(encodeURIComponent).join(",");
-      }
-
       let originalUrl = item.url;
 
       if (!originalUrl && item.id) {
