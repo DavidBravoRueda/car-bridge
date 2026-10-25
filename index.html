@@ -436,43 +436,23 @@
     let currentItem = null;
 
     function getPlaybackUrl(item) {
-      let originalUrl = item.url;
+      const params = new URLSearchParams();
 
-      if (!originalUrl && item.id) {
-        const params = new URLSearchParams({
-          v: item.id,
-          list: "RD" + item.id,
-          start_radio: "1"
-        });
-
-        originalUrl = "https://www.youtube.com/watch?" + params.toString();
+      if (item.url) {
+        const source = new URL(item.url);
+        const v = source.searchParams.get("v");
+        if (v) params.set("v", v);
       }
 
-      if (!originalUrl) {
+      if (!params.has("v") && item.id) params.set("v", item.id);
+
+      if (!params.has("v")) {
         throw new Error("Esta canción no tiene un enlace válido.");
       }
 
-      const url = new URL(originalUrl);
+      params.set("autoplay", "1");
 
-      const validHosts = [
-        "youtube.com",
-        "www.youtube.com",
-        "m.youtube.com",
-        "music.youtube.com",
-        "yout-ube.com",
-        "www.yout-ube.com"
-      ];
-
-      if (!validHosts.includes(url.hostname.toLowerCase())) {
-        throw new Error("El dominio del enlace no es válido.");
-      }
-
-      // Cambiamos únicamente el dominio, conservando v, list,
-      // start_radio y los demás parámetros del enlace.
-      url.protocol = "https:";
-      url.hostname = "www.yout-ube.com";
-
-      return url.toString();
+      return "https://www.yout-ube.com/watch?" + params.toString();
     }
 
     function playSong(item) {
