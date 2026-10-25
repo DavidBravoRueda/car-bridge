@@ -264,6 +264,33 @@
       font-size: 12px;
     }
 
+    #player-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+      display: none;
+      background: #000;
+    }
+
+    #player-layer.open {
+      display: block;
+    }
+
+    #player-frame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    #player-controls {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 100;
+      display: flex;
+      gap: 8px;
+    }
+
     @media (max-width: 760px) {
       .layout {
         grid-template-columns: 1fr;
@@ -391,6 +418,14 @@
     </main>
   </div>
 
+  <div id="player-layer">
+    <iframe id="player-frame" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+    <div id="player-controls">
+      <button class="button" id="player-skip">⏭ Aleatorio</button>
+      <button class="button secondary" id="player-close">✕ Volver</button>
+    </div>
+  </div>
+
   <script>
     "use strict";
 
@@ -440,14 +475,6 @@
       return url.toString();
     }
 
-    // Cola con la canción elegida primero y el resto barajado.
-    // watch_videos admite un máximo de 50 vídeos.
-    function buildShuffledUrl(item) {
-      const others = shuffleItems(items.filter(i => i.id !== item.id)).slice(0, 49);
-      const ids = [item.id, ...others.map(i => i.id)];
-      return "https://www.yout-ube.com/watch_videos?video_ids=" + ids.join(",");
-    }
-
     function playSong(item) {
       try {
         currentItem = item;
@@ -459,15 +486,9 @@
 
         $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
 
-        const destination = buildShuffledUrl(item);
-
-        // Pestaña con nombre: se reutiliza y MiTube queda en segundo plano.
-        const player = window.open(destination, "mitube_player");
-
-        if (!player) {
-          $("status").textContent =
-            "El navegador ha bloqueado la ventana. Permite las ventanas emergentes para esta página.";
-        }
+        const destination = getPlaybackUrl(item);
+        $("player-frame").src = destination;
+        $("player-layer").classList.add("open");
       } catch (error) {
         console.error(error);
         $("status").textContent = error.message;
@@ -641,6 +662,12 @@
     });
 
     $("next-button").addEventListener("click", playRandom);
+
+    $("player-skip").addEventListener("click", playRandom);
+    $("player-close").addEventListener("click", () => {
+      $("player-frame").src = "about:blank";
+      $("player-layer").classList.remove("open");
+    });
 
     loadPlaylist();
   </script>
