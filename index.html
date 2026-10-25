@@ -649,6 +649,21 @@
       $("player-layer").classList.remove("open");
     });
 
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.setActionHandler("nexttrack", () => {
+        $("player-skip").click();
+      });
+    }
+
+    document.addEventListener("keydown", e => {
+      const typing = e.target.matches("input, select");
+
+      if (e.key === "MediaTrackNext" || (e.key.toLowerCase() === "n" && !typing)) {
+        e.preventDefault();
+        $("player-skip").click();
+      }
+    });
+
     loadPlaylist();
   </script>
 </body>
