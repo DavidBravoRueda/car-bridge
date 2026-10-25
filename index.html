@@ -168,34 +168,6 @@
       margin-top: 20px;
     }
 
-    .player-box {
-      display: none;
-      margin: 0 0 32px;
-    }
-
-    .player-box.visible {
-      display: block;
-    }
-
-    .player-box iframe {
-      display: block;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: #000;
-    }
-
-    .player-note {
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .player-note a {
-      color: var(--accent);
-    }
-
     .section-header {
       display: flex;
       flex-wrap: wrap;
@@ -400,21 +372,6 @@
         <img id="featured-image" alt="Portada de la canción">
       </section>
 
-      <section class="player-box" id="player-box">
-        <iframe
-          id="player"
-          title="Reproductor"
-          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-          allowfullscreen
-        ></iframe>
-        <div class="player-note">
-          ¿Se ve en blanco? El sitio no permite incrustarse.
-          <a id="open-external" href="#" target="_blank" rel="noopener">
-            Abrir en pestaña nueva
-          </a>
-        </div>
-      </section>
-
       <div class="section-header">
         <h2>Lista de canciones</h2>
         <select id="sort" aria-label="Ordenar canciones">
@@ -429,7 +386,7 @@
       <div id="songs"></div>
 
       <footer>
-        MiTube · Reproductor externo incrustado.
+        MiTube · Los enlaces se abren en el reproductor externo.
       </footer>
     </main>
   </div>
@@ -439,15 +396,12 @@
 
     const $ = id => document.getElementById(id);
 
-    // Segundos extra tras la duración (solo para el temporizador de respaldo)
-    const EXTRA_SECONDS = 3;
-
-    const PLAYER_HOSTS = ["yout-ube.com", "www.yout-ube.com"];
+    // Playlist real (la misma de update_list.py)
+    const PLAYLIST_ID = "PLPBl-I93G56Y";
 
     let items = [];
     let displayedItems = [];
     let currentItem = null;
-    let nextTimer = null;
 
     function getPlaybackUrl(item) {
       let originalUrl = item.url;
@@ -476,20 +430,24 @@
         throw new Error("El dominio del enlace no es válido.");
       }
 
-      // Solo v=ID, sin mix (list=RD): así no se sale de tu lista.
       const videoId = url.searchParams.get("v") || item.id;
+
+      // Playlist real en lugar de la radio (list=RD...): al terminar,
+      // pasa a la siguiente canción de tu playlist y no a otras de fuera.
       const result = new URL("https://www.yout-ube.com/watch");
       result.searchParams.set("v", videoId);
+      result.searchParams.set("list", PLAYLIST_ID);
+
+      const position = items.findIndex(other => other.id === videoId) + 1;
+      if (position > 0) {
+        result.searchParams.set("index", String(position));
+      }
 
       return result.toString();
     }
 
     function playSong(item) {
-      clearTimeout(nextTimer);
-
       try {
-        const destination = getPlaybackUrl(item);
-
         currentItem = item;
 
         $("featured-title").textContent = item.title || "Sin título";
@@ -497,68 +455,15 @@
         $("featured-image").src = item.thumb ||
           `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
 
-        $("player-box").classList.add("visible");
-        $("player").src = destination;
-        $("open-external").href = destination;
+        $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
 
-        $("status").textContent =
-          "Reproduciendo " + (item.title || "canción") +
-          " · después pasará a otra aleatoria.";
-
-        // Respaldo: si el reproductor no avisa del final, usa la duración
-        if (item.dur > 0) {
-          nextTimer = setTimeout(
-            playRandom,
-            (item.dur + EXTRA_SECONDS) * 1000
-          );
-        }
+        const destination = getPlaybackUrl(item);
+        window.location.assign(destination);
       } catch (error) {
         console.error(error);
         $("status").textContent = error.message;
       }
     }
-
-    // Intenta reconocer un aviso de "terminado" del reproductor
-    function isEndedMessage(data) {
-      if (data == null) return false;
-
-      let msg = data;
-
-      if (typeof msg === "string") {
-        try {
-          msg = JSON.parse(msg);
-        } catch {
-          return /ended|finished|terminad/i.test(msg);
-        }
-      }
-
-      if (typeof msg !== "object") return false;
-
-      // Formato de la IFrame API de YouTube: estado 0 = terminado
-      if (msg.event === "onStateChange" && msg.info === 0) return true;
-      if (msg.event === "infoDelivery" && msg.info?.playerState === 0) return true;
-
-      const text = JSON.stringify(msg);
-      return /"(ended|finished)"|"event":"(ended|end|finish)"/i.test(text);
-    }
-
-    window.addEventListener("message", event => {
-      let host = "";
-
-      try {
-        host = new URL(event.origin).hostname.toLowerCase();
-      } catch {
-        return;
-      }
-
-      if (!PLAYER_HOSTS.includes(host)) return;
-
-      console.log("Mensaje del reproductor:", event.data);
-
-      if (isEndedMessage(event.data)) {
-        playRandom();
-      }
-    });
 
     function shuffleItems(list) {
       const shuffled = list.slice();
