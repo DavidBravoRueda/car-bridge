@@ -317,10 +317,13 @@
 
     const $ = id => document.getElementById(id);
 
-    // false = enlace simple (seguro). true = añade list=RD<id> (mix de YouTube)
-    // para que al terminar pase a otra canción. Pruébalo y, si tu lanzador
-    // muestra el aviso otra vez, déjalo en false.
-    const USE_MIX = false;
+    // true = envía al reproductor una cola aleatoria (la canción elegida
+    // primero y el resto barajado), así al terminar pasa a otra canción
+    // distinta. false = enlace simple de una sola canción (se repite).
+    const USE_QUEUE = true;
+
+    // Máximo de canciones en la cola (el límite de YouTube es 50)
+    const QUEUE_SIZE = 50;
 
     let items = [];
     let displayedItems = [];
@@ -336,7 +339,7 @@
       return a;
     }
 
-    function getPlaybackUrl(item) {
+    function getVideoId(item) {
       let originalUrl = item.url;
 
       if (!originalUrl && item.id) {
@@ -362,30 +365,42 @@
         throw new Error("El dominio del enlace no es válido.");
       }
 
-      // Enlace en el formato que acepta el lanzador:
-      // https://www.yout-ube.com/watch?v=ID
-      const videoId = url.searchParams.get("v") || item.id;
-      const result = new URL("https://www.yout-ube.com/watch");
-      result.searchParams.set("v", videoId);
+      return url.searchParams.get("v") || item.id;
+    }
 
-      // Opcional (poner USE_MIX = true para probar): añade un mix de
-      // YouTube para que al terminar pase a una canción distinta.
-      if (USE_MIX) {
-        result.searchParams.set("list", "RD" + videoId);
+    function getPlaybackUrl(item) {
+      const videoId = getVideoId(item);
+
+      if (USE_QUEUE && items.length > 1) {
+        // La canción elegida va primero; el resto, en orden aleatorio
+        const others = shuffle(
+          items.filter(other => other.id !== item.id)
+        ).slice(0, QUEUE_SIZE - 1);
+
+        const ids = [videoId, ...others.map(getVideoId)];
+        const queue = new URL("https://www.yout-ube.com/watch_videos");
+        queue.searchParams.set("video_ids", ids.join(","));
+        return queue.toString();
       }
 
+      // Enlace simple en el formato que acepta el lanzador:
+      // https://www.yout-ube.com/watch?v=ID
+      const result = new URL("https://www.yout-ube.com/watch");
+      result.searchParams.set("v", videoId);
       return result.toString();
     }
 
     function playSong(item) {
       try {
+        const playbackUrl = getPlaybackUrl(item);
+
         currentItem = item;
         $("featured-title").textContent = item.title || "Sin título";
         $("featured-by").textContent = item.by || "";
         $("featured-image").src = item.thumb || "";
         $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
 
-        window.location.assign(getPlaybackUrl(item));
+        window.location.assign(playbackUrl);
       } catch (error) {
         console.error(error);
         $("status").textContent = error.message;
