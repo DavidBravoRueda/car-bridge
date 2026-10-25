@@ -264,79 +264,6 @@
       font-size: 12px;
     }
 
-    /* Reproductor a pantalla completa con botones superpuestos */
-    #player-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 1000;
-      display: none;
-      background: #000;
-    }
-
-    #player-overlay.visible {
-      display: block;
-    }
-
-    #player-frame {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border: 0;
-      background: #000;
-    }
-
-    .overlay-controls {
-      position: absolute;
-      right: 18px;
-      bottom: 90px;
-      z-index: 1001;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 10px;
-    }
-
-    .overlay-button {
-      padding: 14px 20px;
-      color: #101114;
-      background: var(--accent);
-      border: 0;
-      border-radius: 999px;
-      font-weight: bold;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, .6);
-    }
-
-    .overlay-button.secondary {
-      color: var(--text);
-      background: rgba(25, 26, 32, .85);
-      border: 1px solid var(--border);
-    }
-
-    .overlay-top {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      z-index: 1001;
-    }
-
-    .overlay-note {
-      position: absolute;
-      left: 14px;
-      bottom: 14px;
-      z-index: 1001;
-      max-width: calc(100% - 28px);
-      padding: 6px 10px;
-      color: var(--muted);
-      font-size: 12px;
-      background: rgba(0, 0, 0, .6);
-      border-radius: 8px;
-    }
-
-    .overlay-note a {
-      color: var(--accent);
-    }
-
     @media (max-width: 760px) {
       .layout {
         grid-template-columns: 1fr;
@@ -459,41 +386,15 @@
       <div id="songs"></div>
 
       <footer>
-        MiTube · Reproductor externo incrustado.
+        MiTube · Los enlaces se abren en el reproductor externo.
       </footer>
     </main>
-  </div>
-
-  <div id="player-overlay" role="dialog" aria-label="Reproductor">
-    <iframe
-      id="player-frame"
-      title="Reproductor"
-      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-      allowfullscreen
-    ></iframe>
-
-    <div class="overlay-top">
-      <button class="overlay-button secondary" id="close-player" type="button">✕ Cerrar</button>
-    </div>
-
-    <div class="overlay-controls">
-      <button class="overlay-button" id="overlay-next" type="button">⤨ Siguiente</button>
-    </div>
-
-    <div class="overlay-note">
-      ¿Pantalla en blanco? El sitio no permite incrustarse.
-      <a id="open-external" href="#" target="_blank" rel="noopener">
-        Abrir en pestaña nueva
-      </a>
-    </div>
   </div>
 
   <script>
     "use strict";
 
     const $ = id => document.getElementById(id);
-
-    // Playlist real (la misma de update_list.py)
     const PLAYLIST_ID = "PLPBl-I93G56Y";
 
     let items = [];
@@ -501,35 +402,12 @@
     let currentItem = null;
 
     function getPlaybackUrl(item) {
-      let originalUrl = item.url;
+      const videoId = item.id;
 
-      if (!originalUrl && item.id) {
-        originalUrl = "https://www.youtube.com/watch?v=" +
-          encodeURIComponent(item.id);
-      }
-
-      if (!originalUrl) {
+      if (!videoId) {
         throw new Error("Esta canción no tiene un enlace válido.");
       }
 
-      const url = new URL(originalUrl);
-
-      const validHosts = [
-        "youtube.com",
-        "www.youtube.com",
-        "m.youtube.com",
-        "music.youtube.com",
-        "yout-ube.com",
-        "www.yout-ube.com"
-      ];
-
-      if (!validHosts.includes(url.hostname.toLowerCase())) {
-        throw new Error("El dominio del enlace no es válido.");
-      }
-
-      const videoId = url.searchParams.get("v") || item.id;
-
-      // Playlist real en lugar de la radio (list=RD...)
       const result = new URL("https://www.yout-ube.com/watch");
       result.searchParams.set("v", videoId);
       result.searchParams.set("list", PLAYLIST_ID);
@@ -542,56 +420,23 @@
       return result.toString();
     }
 
-    function openPlayer() {
-      const overlay = $("player-overlay");
-      overlay.classList.add("visible");
-
-      // Pantalla completa del contenedor, para que los botones sigan visibles
-      if (!document.fullscreenElement && overlay.requestFullscreen) {
-        overlay.requestFullscreen().catch(() => {});
-      }
-    }
-
-    function closePlayer() {
-      $("player-overlay").classList.remove("visible");
-      $("player-frame").src = "about:blank";
-
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
-    }
-
     function playSong(item) {
       try {
         const destination = getPlaybackUrl(item);
-
         currentItem = item;
 
         $("featured-title").textContent = item.title || "Sin título";
         $("featured-by").textContent = item.by || "";
         $("featured-image").src = item.thumb ||
           `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
+        $("status").textContent =
+          "Abriendo " + (item.title || "canción") + "…";
 
-        $("status").textContent = "Reproduciendo " + (item.title || "canción");
-
-        $("player-frame").src = destination;
-        $("open-external").href = destination;
-        openPlayer();
+        window.location.assign(destination);
       } catch (error) {
         console.error(error);
         $("status").textContent = error.message;
       }
-    }
-
-    function shuffleItems(list) {
-      const shuffled = list.slice();
-
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-
-      return shuffled;
     }
 
     function renderSongs() {
@@ -707,10 +552,10 @@
         $("author").textContent = data.uploader || "Tu biblioteca musical";
 
         if (items.length) {
-          $("featured-title").textContent = items[0].title;
-          $("featured-by").textContent = items[0].by;
-          $("featured-image").src = items[0].thumb;
           currentItem = items[0];
+          $("featured-title").textContent = currentItem.title;
+          $("featured-by").textContent = currentItem.by;
+          $("featured-image").src = currentItem.thumb;
         }
 
         renderSongs();
@@ -721,50 +566,44 @@
       }
     }
 
-    $("search").addEventListener("input", renderSongs);
-    $("sort").addEventListener("change", renderSongs);
-    $("reload-button").addEventListener("click", loadPlaylist);
-    $("all-button").addEventListener("click", () => {
-      $("search").value = "";
-      $("sort").value = "default";
-      renderSongs();
-    });
-
     function playRandom() {
       if (!items.length) {
         $("status").textContent = "No hay canciones cargadas.";
         return;
       }
 
-      let item;
+      let nextItem;
 
       if (items.length === 1) {
-        item = items[0];
+        nextItem = items[0];
       } else {
-        // Aleatoria, pero distinta de la que está sonando
         do {
-          item = items[Math.floor(Math.random() * items.length)];
-        } while (item === currentItem);
+          nextItem = items[Math.floor(Math.random() * items.length)];
+        } while (nextItem === currentItem);
       }
 
-      playSong(item);
+      playSong(nextItem);
     }
+
+    $("search").addEventListener("input", renderSongs);
+    $("sort").addEventListener("change", renderSongs);
+    $("reload-button").addEventListener("click", loadPlaylist);
+
+    $("all-button").addEventListener("click", () => {
+      $("search").value = "";
+      $("sort").value = "default";
+      renderSongs();
+    });
 
     $("shuffle-button").addEventListener("click", playRandom);
     $("shuffle-top").addEventListener("click", playRandom);
+    $("next-button").addEventListener("click", playRandom);
 
     $("featured-play").addEventListener("click", () => {
       if (currentItem) {
         playSong(currentItem);
       }
     });
-
-    $("next-button").addEventListener("click", playRandom);
-    $("overlay-next").addEventListener("click", playRandom);
-    $("close-player").addEventListener("click", closePlayer);
-
-    // Si sales de pantalla completa con Esc, el reproductor sigue visible
-    // a pantalla del navegador; usa ✕ para cerrarlo.
 
     loadPlaylist();
   </script>
