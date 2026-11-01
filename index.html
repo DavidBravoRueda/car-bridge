@@ -264,20 +264,16 @@
       font-size: 12px;
     }
 
-    /* El reproductor se crea al cargar la página pero queda oculto
-       (sin display:none, para que YouTube lo prepare bien). */
     #player-layer {
       position: fixed;
       inset: 0;
       z-index: 99;
+      display: none;
       background: #000;
-      visibility: hidden;
-      pointer-events: none;
     }
 
     #player-layer.open {
-      visibility: visible;
-      pointer-events: auto;
+      display: block;
     }
 
     #player-frame {
@@ -423,8 +419,7 @@
   </div>
 
   <div id="player-layer">
-    <!-- YouTube sustituye este div por su reproductor -->
-    <div id="player-frame"></div>
+    <iframe id="player-frame" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
     <div id="player-controls">
       <button class="button" id="player-skip">⏭ Aleatorio</button>
       <button class="button secondary" id="player-close">✕ Volver</button>
@@ -436,107 +431,44 @@
 
     const $ = id => document.getElementById(id);
 
+    // Tu playlist de YouTube. Se usa como cola para que el ⏭ del coche
+    // pase a la siguiente canción de TU lista y no a una recomendada.
+    const PLAYLIST_ID = "PLPBl-I93G56Y";
+
     let items = [];
     let displayedItems = [];
     let currentItem = null;
 
-    let player = null;
-    let playerReady = false;
-    let pendingQueue = null;
-
-    // ---------- Reproductor de YouTube ----------
-
-    // YouTube llama a esta función cuando su código está listo.
-    window.onYouTubeIframeAPIReady = function () {
-      player = new YT.Player("player-frame", {
-        width: "100%",
-        height: "100%",
-        playerVars: {
-          autoplay: 1,
-          playsinline: 1,
-          rel: 0
-        },
-        events: {
-          onReady: () => {
-            playerReady = true;
-
-            if (pendingQueue) {
-              startQueue(pendingQueue);
-              pendingQueue = null;
-            }
-          },
-          onStateChange: event => {
-            // Cuando cambia de canción (también con el ⏭ del coche),
-            // actualizamos el título que se muestra.
-            if (event.data === YT.PlayerState.PLAYING) {
-              const data = player.getVideoData();
-              const item = items.find(i => i.id === data.video_id);
-
-              if (item && item !== currentItem) {
-                showFeatured(item);
-              }
-            }
-          },
-          onError: () => {
-            // Si un vídeo no se puede reproducir aquí, saltamos al siguiente.
-            $("status").textContent = "Vídeo no disponible, pasando al siguiente…";
-            player.nextVideo();
-          }
-        }
-      });
-    };
-
-    const ytScript = document.createElement("script");
-    ytScript.src = "https://www.youtube.com/iframe_api";
-    document.head.appendChild(ytScript);
-
-    function startQueue(queue) {
-      player.loadPlaylist(queue.map(item => item.id), 0, 0);
-      player.playVideo();
-    }
-
-    // ---------- Cola aleatoria ----------
-
-    function shuffleItems(list) {
-      const shuffled = list.slice();
-
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    function getPlaybackUrl(item) {
+      if (!item || !item.id) {
+        throw new Error("Esta canción no tiene un enlace válido.");
       }
 
-      return shuffled;
-    }
+      const params = new URLSearchParams({
+        v: item.id,
+        list: PLAYLIST_ID,
+        autoplay: "1"
+      });
 
-    // La canción elegida primero y el resto de tu lista mezclada.
-    // Así el botón ⏭ del coche pasa a otra canción aleatoria de TU lista.
-    function buildQueue(first) {
-      const others = shuffleItems(items.filter(item => item !== first));
-      return [first, ...others].slice(0, 150);
-    }
-
-    // ---------- Reproducción ----------
-
-    function showFeatured(item) {
-      currentItem = item;
-      $("featured-title").textContent = item.title || "Sin título";
-      $("featured-by").textContent = item.by || "";
-      $("featured-image").src = item.thumb ||
-        `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
+      return "https://www.yout-ube.com/watch?" + params.toString();
     }
 
     function playSong(item) {
-      showFeatured(item);
-      $("status").textContent = "Reproduciendo " + (item.title || "canción") + "…";
-      $("player-layer").classList.add("open");
+      try {
+        currentItem = item;
 
-      const queue = buildQueue(item);
+        $("featured-title").textContent = item.title || "Sin título";
+        $("featured-by").textContent = item.by || "";
+        $("featured-image").src = item.thumb ||
+          `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
 
-      if (playerReady) {
-        startQueue(queue);
-      } else {
-        // El reproductor aún se está preparando: empezará en cuanto esté listo.
-        pendingQueue = queue;
+        $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
+
+        $("player-frame").src = getPlaybackUrl(item);
+        $("player-layer").classList.add("open");
+      } catch (error) {
+        console.error(error);
+        $("status").textContent = error.message;
       }
     }
 
@@ -549,8 +481,6 @@
       const item = items[Math.floor(Math.random() * items.length)];
       playSong(item);
     }
-
-    // ---------- Lista ----------
 
     function renderSongs() {
       const query = $("search").value.trim().toLocaleLowerCase("es");
@@ -665,7 +595,10 @@
         $("author").textContent = data.uploader || "Tu biblioteca musical";
 
         if (items.length) {
-          showFeatured(items[0]);
+          $("featured-title").textContent = items[0].title;
+          $("featured-by").textContent = items[0].by;
+          $("featured-image").src = items[0].thumb;
+          currentItem = items[0];
         }
 
         renderSongs();
@@ -675,8 +608,6 @@
           "No se ha podido cargar lista.json. Comprueba que está publicado junto a index.html.";
       }
     }
-
-    // ---------- Botones ----------
 
     $("search").addEventListener("input", renderSongs);
     $("sort").addEventListener("change", renderSongs);
@@ -700,9 +631,7 @@
 
     $("player-skip").addEventListener("click", playRandom);
     $("player-close").addEventListener("click", () => {
-      if (playerReady) {
-        player.stopVideo();
-      }
+      $("player-frame").src = "about:blank";
       $("player-layer").classList.remove("open");
     });
 
