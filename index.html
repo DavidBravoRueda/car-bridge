@@ -435,44 +435,40 @@
     let displayedItems = [];
     let currentItem = null;
 
-    function getPlaybackUrl(item) {
-      let originalUrl = item.url;
+    function shuffleItems(list) {
+      const shuffled = list.slice();
 
-      if (!originalUrl && item.id) {
-        const params = new URLSearchParams({
-          v: item.id,
-          list: "RD" + item.id,
-          start_radio: "1"
-        });
-
-        originalUrl = "https://www.youtube.com/watch?" + params.toString();
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
 
-      if (!originalUrl) {
+      return shuffled;
+    }
+
+    // Crea una cola: la canción elegida primero y el resto de tu lista mezclada.
+    // Así el botón ⏭ del coche pasa a otra canción aleatoria de TU lista.
+    function buildQueue(first) {
+      const others = shuffleItems(items.filter(item => item !== first));
+      return [first, ...others].slice(0, 150);
+    }
+
+    // Reproductor de YouTube con tu lista como cola (sin radio de recomendaciones).
+    function getPlaybackUrl(queue) {
+      const [first, ...rest] = queue;
+
+      if (!first || !first.id) {
         throw new Error("Esta canción no tiene un enlace válido.");
       }
 
-      const url = new URL(originalUrl);
+      const params = new URLSearchParams({
+        autoplay: "1",
+        playsinline: "1",
+        rel: "0",
+        playlist: rest.map(item => item.id).join(",")
+      });
 
-      const validHosts = [
-        "youtube.com",
-        "www.youtube.com",
-        "m.youtube.com",
-        "music.youtube.com",
-        "yout-ube.com",
-        "www.yout-ube.com"
-      ];
-
-      if (!validHosts.includes(url.hostname.toLowerCase())) {
-        throw new Error("El dominio del enlace no es válido.");
-      }
-
-      // Cambiamos únicamente el dominio, conservando v, list,
-      // start_radio y los demás parámetros del enlace.
-      url.protocol = "https:";
-      url.hostname = "www.yout-ube.com";
-
-      return url.toString();
+      return `https://www.youtube.com/embed/${encodeURIComponent(first.id)}?${params}`;
     }
 
     function playSong(item) {
@@ -486,13 +482,22 @@
 
         $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
 
-        const destination = getPlaybackUrl(item);
-        $("player-frame").src = destination;
+        $("player-frame").src = getPlaybackUrl(buildQueue(item));
         $("player-layer").classList.add("open");
       } catch (error) {
         console.error(error);
         $("status").textContent = error.message;
       }
+    }
+
+    function playRandom() {
+      if (!items.length) {
+        $("status").textContent = "No hay canciones cargadas.";
+        return;
+      }
+
+      const item = items[Math.floor(Math.random() * items.length)];
+      playSong(item);
     }
 
     function renderSongs() {
@@ -620,16 +625,6 @@
         $("status").textContent =
           "No se ha podido cargar lista.json. Comprueba que está publicado junto a index.html.";
       }
-    }
-
-    function playRandom() {
-      if (!items.length) {
-        $("status").textContent = "No hay canciones cargadas.";
-        return;
-      }
-
-      const item = items[Math.floor(Math.random() * items.length)];
-      playSong(item);
     }
 
     $("search").addEventListener("input", renderSongs);
