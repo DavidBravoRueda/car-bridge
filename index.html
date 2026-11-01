@@ -291,7 +291,12 @@
       gap: 8px;
     }
 
-    /* Animación del botón verde cuando se pulsa ⏭ en el volante */
+    /* El botón "⏭ Aleatorio" cambia de color suavemente cada vez que se pulsa */
+    #player-skip {
+      transition: background-color 0.3s ease;
+    }
+
+    /* Animación del botón cuando se pulsa ⏭ en el volante */
     #player-skip.pressed {
       animation: car-press 0.45s ease;
     }
@@ -299,15 +304,15 @@
     @keyframes car-press {
       0% {
         transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(184, 245, 0, 0.7);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
       }
       30% {
         transform: scale(0.85);
-        box-shadow: 0 0 0 8px rgba(184, 245, 0, 0.45);
+        box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.45);
       }
       100% {
         transform: scale(1);
-        box-shadow: 0 0 0 14px rgba(184, 245, 0, 0);
+        box-shadow: 0 0 0 14px rgba(255, 255, 255, 0);
       }
     }
 
@@ -560,6 +565,15 @@
       });
     }
 
+    // Colores que va tomando el botón "⏭ Aleatorio" cada vez que se pulsa
+    const skipColors = ["#b8f500", "#00e5ff", "#ff4fd8", "#ffb300", "#9d7bff"];
+    let skipColorIndex = 0;
+
+    function changeSkipColor() {
+      skipColorIndex = (skipColorIndex + 1) % skipColors.length;
+      $("player-skip").style.backgroundColor = skipColors[skipColorIndex];
+    }
+
     function playSong(item) {
       try {
         currentItem = item;
@@ -750,6 +764,7 @@
     $("next-button").addEventListener("click", playRandom);
 
     $("player-skip").addEventListener("click", playRandom);
+    $("player-skip").addEventListener("click", changeSkipColor);
     $("player-close").addEventListener("click", () => {
       $("player-frame").src = "about:blank";
       $("player-layer").classList.remove("open");
