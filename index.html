@@ -475,54 +475,6 @@
       return url.toString();
     }
 
-    // ---------- Botón ⏭ del coche ----------
-
-    // Sonido de silencio para que el coche "hable" con esta página
-    // y no con el reproductor de dentro.
-    function makeSilentWav() {
-      const rate = 8000;
-      const samples = rate;
-      const buffer = new ArrayBuffer(44 + samples);
-      const view = new DataView(buffer);
-      const write = (offset, text) =>
-        [...text].forEach((c, i) => view.setUint8(offset + i, c.charCodeAt(0)));
-
-      write(0, "RIFF");
-      view.setUint32(4, 36 + samples, true);
-      write(8, "WAVE");
-      write(12, "fmt ");
-      view.setUint32(16, 16, true);
-      view.setUint16(20, 1, true);
-      view.setUint16(22, 1, true);
-      view.setUint32(24, rate, true);
-      view.setUint32(28, rate, true);
-      view.setUint16(32, 1, true);
-      view.setUint16(34, 8, true);
-      write(36, "data");
-      view.setUint32(40, samples, true);
-      for (let i = 0; i < samples; i++) view.setUint8(44 + i, 128);
-
-      return URL.createObjectURL(new Blob([buffer], { type: "audio/wav" }));
-    }
-
-    const silentAudio = new Audio(makeSilentWav());
-    silentAudio.loop = true;
-
-    function connectCarButtons(item) {
-      silentAudio.play().catch(() => {});
-
-      if (!("mediaSession" in navigator)) return;
-
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: item.title || "MiTube",
-        artist: item.by || "",
-        artwork: [{ src: item.thumb, sizes: "480x360", type: "image/jpeg" }]
-      });
-
-      // ⏭ del coche = botón verde "⏭ Aleatorio"
-      navigator.mediaSession.setActionHandler("nexttrack", () => playRandom());
-    }
-
     function playSong(item) {
       try {
         currentItem = item;
@@ -537,7 +489,6 @@
         const destination = getPlaybackUrl(item);
         $("player-frame").src = destination;
         $("player-layer").classList.add("open");
-        connectCarButtons(item);
       } catch (error) {
         console.error(error);
         $("status").textContent = error.message;
@@ -705,7 +656,6 @@
     $("player-close").addEventListener("click", () => {
       $("player-frame").src = "about:blank";
       $("player-layer").classList.remove("open");
-      silentAudio.pause();
     });
 
     loadPlaylist();
