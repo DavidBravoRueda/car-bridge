@@ -264,16 +264,20 @@
       font-size: 12px;
     }
 
+    /* El reproductor se crea al cargar la página pero queda oculto
+       (sin display:none, para que YouTube lo prepare bien). */
     #player-layer {
       position: fixed;
       inset: 0;
       z-index: 99;
-      display: none;
       background: #000;
+      visibility: hidden;
+      pointer-events: none;
     }
 
     #player-layer.open {
-      display: block;
+      visibility: visible;
+      pointer-events: auto;
     }
 
     #player-frame {
@@ -419,7 +423,8 @@
   </div>
 
   <div id="player-layer">
-    <iframe id="player-frame" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+    <!-- YouTube sustituye este div por su reproductor -->
+    <div id="player-frame"></div>
     <div id="player-controls">
       <button class="button" id="player-skip">⏭ Aleatorio</button>
       <button class="button secondary" id="player-close">✕ Volver</button>
@@ -435,6 +440,63 @@
     let displayedItems = [];
     let currentItem = null;
 
+    let player = null;
+    let playerReady = false;
+    let pendingQueue = null;
+
+    // ---------- Reproductor de YouTube ----------
+
+    // YouTube llama a esta función cuando su código está listo.
+    window.onYouTubeIframeAPIReady = function () {
+      player = new YT.Player("player-frame", {
+        width: "100%",
+        height: "100%",
+        playerVars: {
+          autoplay: 1,
+          playsinline: 1,
+          rel: 0
+        },
+        events: {
+          onReady: () => {
+            playerReady = true;
+
+            if (pendingQueue) {
+              startQueue(pendingQueue);
+              pendingQueue = null;
+            }
+          },
+          onStateChange: event => {
+            // Cuando cambia de canción (también con el ⏭ del coche),
+            // actualizamos el título que se muestra.
+            if (event.data === YT.PlayerState.PLAYING) {
+              const data = player.getVideoData();
+              const item = items.find(i => i.id === data.video_id);
+
+              if (item && item !== currentItem) {
+                showFeatured(item);
+              }
+            }
+          },
+          onError: () => {
+            // Si un vídeo no se puede reproducir aquí, saltamos al siguiente.
+            $("status").textContent = "Vídeo no disponible, pasando al siguiente…";
+            player.nextVideo();
+          }
+        }
+      });
+    };
+
+    const ytScript = document.createElement("script");
+    ytScript.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(ytScript);
+
+    function startQueue(queue) {
+      player.loadPlaylist(queue.map(item => item.id), 0, 0);
+      player.playVideo();
+    }
+
+    // ---------- Cola aleatoria ----------
+
     function shuffleItems(list) {
       const shuffled = list.slice();
 
@@ -446,47 +508,35 @@
       return shuffled;
     }
 
-    // Crea una cola: la canción elegida primero y el resto de tu lista mezclada.
+    // La canción elegida primero y el resto de tu lista mezclada.
     // Así el botón ⏭ del coche pasa a otra canción aleatoria de TU lista.
     function buildQueue(first) {
       const others = shuffleItems(items.filter(item => item !== first));
       return [first, ...others].slice(0, 150);
     }
 
-    // Reproductor de YouTube con tu lista como cola (sin radio de recomendaciones).
-    function getPlaybackUrl(queue) {
-      const [first, ...rest] = queue;
+    // ---------- Reproducción ----------
 
-      if (!first || !first.id) {
-        throw new Error("Esta canción no tiene un enlace válido.");
-      }
-
-      const params = new URLSearchParams({
-        autoplay: "1",
-        playsinline: "1",
-        rel: "0",
-        playlist: rest.map(item => item.id).join(",")
-      });
-
-      return `https://www.youtube.com/embed/${encodeURIComponent(first.id)}?${params}`;
+    function showFeatured(item) {
+      currentItem = item;
+      $("featured-title").textContent = item.title || "Sin título";
+      $("featured-by").textContent = item.by || "";
+      $("featured-image").src = item.thumb ||
+        `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
     }
 
     function playSong(item) {
-      try {
-        currentItem = item;
+      showFeatured(item);
+      $("status").textContent = "Reproduciendo " + (item.title || "canción") + "…";
+      $("player-layer").classList.add("open");
 
-        $("featured-title").textContent = item.title || "Sin título";
-        $("featured-by").textContent = item.by || "";
-        $("featured-image").src = item.thumb ||
-          `https://i.ytimg.com/vi/${encodeURIComponent(item.id)}/hqdefault.jpg`;
+      const queue = buildQueue(item);
 
-        $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
-
-        $("player-frame").src = getPlaybackUrl(buildQueue(item));
-        $("player-layer").classList.add("open");
-      } catch (error) {
-        console.error(error);
-        $("status").textContent = error.message;
+      if (playerReady) {
+        startQueue(queue);
+      } else {
+        // El reproductor aún se está preparando: empezará en cuanto esté listo.
+        pendingQueue = queue;
       }
     }
 
@@ -499,6 +549,8 @@
       const item = items[Math.floor(Math.random() * items.length)];
       playSong(item);
     }
+
+    // ---------- Lista ----------
 
     function renderSongs() {
       const query = $("search").value.trim().toLocaleLowerCase("es");
@@ -613,10 +665,7 @@
         $("author").textContent = data.uploader || "Tu biblioteca musical";
 
         if (items.length) {
-          $("featured-title").textContent = items[0].title;
-          $("featured-by").textContent = items[0].by;
-          $("featured-image").src = items[0].thumb;
-          currentItem = items[0];
+          showFeatured(items[0]);
         }
 
         renderSongs();
@@ -626,6 +675,8 @@
           "No se ha podido cargar lista.json. Comprueba que está publicado junto a index.html.";
       }
     }
+
+    // ---------- Botones ----------
 
     $("search").addEventListener("input", renderSongs);
     $("sort").addEventListener("change", renderSongs);
@@ -649,7 +700,9 @@
 
     $("player-skip").addEventListener("click", playRandom);
     $("player-close").addEventListener("click", () => {
-      $("player-frame").src = "about:blank";
+      if (playerReady) {
+        player.stopVideo();
+      }
       $("player-layer").classList.remove("open");
     });
 
