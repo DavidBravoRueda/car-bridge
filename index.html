@@ -537,8 +537,24 @@
     const silentAudio = new Audio(makeSilentWav(60));
     silentAudio.loop = true;
 
+    // En cuanto empieza a sonar la canción, YouTube pausa este silencio y se
+    // queda con el ⏭ del volante. Lo volvemos a poner en marcha al momento
+    // (y cada segundo, por si acaso) para que el ⏭ siga llegando aquí.
+    let keepConnectedTimer = null;
+
+    function keepSilenceOn() {
+      if ($("player-layer").classList.contains("open")) {
+        silentAudio.play().catch(() => {});
+      }
+    }
+
+    silentAudio.addEventListener("pause", keepSilenceOn);
+
     function connectCarButtons(item) {
       silentAudio.play().catch(() => {});
+
+      clearInterval(keepConnectedTimer);
+      keepConnectedTimer = setInterval(keepSilenceOn, 1000);
 
       if (!("mediaSession" in navigator)) {
         return;
@@ -768,6 +784,7 @@
     $("player-close").addEventListener("click", () => {
       $("player-frame").src = "about:blank";
       $("player-layer").classList.remove("open");
+      clearInterval(keepConnectedTimer);
       silentAudio.pause();
     });
 
