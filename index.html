@@ -444,12 +444,16 @@
   </div>
 
   <div id="player-layer">
-    <iframe id="player-frame" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+    <!-- CAMBIO: aquí YouTube crea UN solo reproductor que se reutiliza para todas las canciones -->
+    <div id="player-frame"></div>
     <div id="player-controls">
       <button class="button" id="player-skip">⏭ Aleatorio</button>
       <button class="button secondary" id="player-close">✕ Volver</button>
     </div>
   </div>
+
+  <!-- CAMBIO: control oficial del reproductor de YouTube -->
+  <script src="https://www.youtube.com/iframe_api"></script>
 
   <script>
     "use strict";
@@ -460,44 +464,57 @@
     let displayedItems = [];
     let currentItem = null;
 
-    function getPlaybackUrl(item) {
-      let originalUrl = item.url;
+    // ---------- CAMBIO: un solo reproductor para todas las canciones ----------
+    // Antes cada canción cargaba una página nueva de yout-ube, y el iPhone
+    // no deja que una página nueva suene sin tocar la pantalla. Ahora el
+    // reproductor se crea una vez (con tu toque) y después solo se le cambia
+    // la canción, así que ⏭ funciona igual que el botón Aleatorio.
+    // Se usa youtube-nocookie con la radio "RD" de la canción, que es
+    // lo mismo que abría yout-ube.
+    let ytPlayer = null;
+    let ytReady = false;
+    let pendingItem = null;
 
-      if (!originalUrl && item.id) {
-        const params = new URLSearchParams({
-          v: item.id,
-          list: "RD" + item.id,
-          start_radio: "1"
+    window.onYouTubeIframeAPIReady = () => {
+      ytReady = true;
+
+      if (pendingItem) {
+        const item = pendingItem;
+        pendingItem = null;
+        loadInPlayer(item);
+      }
+    };
+
+    function loadInPlayer(item) {
+      if (!ytReady) {
+        pendingItem = item;
+        return;
+      }
+
+      if (!ytPlayer) {
+        ytPlayer = new YT.Player("player-frame", {
+          host: "https://www.youtube-nocookie.com",
+          width: "100%",
+          height: "100%",
+          videoId: item.id,
+          playerVars: {
+            autoplay: 1,
+            playsinline: 1,
+            listType: "playlist",
+            list: "RD" + item.id
+          },
+          events: {
+            onReady: event => event.target.playVideo()
+          }
         });
-
-        originalUrl = "https://www.youtube.com/watch?" + params.toString();
+        return;
       }
 
-      if (!originalUrl) {
-        throw new Error("Esta canción no tiene un enlace válido.");
-      }
-
-      const url = new URL(originalUrl);
-
-      const validHosts = [
-        "youtube.com",
-        "www.youtube.com",
-        "m.youtube.com",
-        "music.youtube.com",
-        "yout-ube.com",
-        "www.yout-ube.com"
-      ];
-
-      if (!validHosts.includes(url.hostname.toLowerCase())) {
-        throw new Error("El dominio del enlace no es válido.");
-      }
-
-      // Cambiamos únicamente el dominio, conservando v, list,
-      // start_radio y los demás parámetros del enlace.
-      url.protocol = "https:";
-      url.hostname = "www.yout-ube.com";
-
-      return url.toString();
+      ytPlayer.loadPlaylist({
+        list: "RD" + item.id,
+        listType: "playlist",
+        index: 0
+      });
     }
 
     // ---------- Botón ⏭ del volante del coche ----------
@@ -601,9 +618,9 @@
 
         $("status").textContent = "Abriendo " + (item.title || "canción") + "…";
 
-        const destination = getPlaybackUrl(item);
-        $("player-frame").src = destination;
+        // CAMBIO: antes se cargaba una página nueva; ahora se cambia la canción
         $("player-layer").classList.add("open");
+        loadInPlayer(item);
         connectCarButtons(item);
       } catch (error) {
         console.error(error);
@@ -782,7 +799,10 @@
     $("player-skip").addEventListener("click", playRandom);
     $("player-skip").addEventListener("click", changeSkipColor);
     $("player-close").addEventListener("click", () => {
-      $("player-frame").src = "about:blank";
+      // CAMBIO: se para la canción pero el reproductor se queda creado
+      if (ytPlayer && ytPlayer.stopVideo) {
+        ytPlayer.stopVideo();
+      }
       $("player-layer").classList.remove("open");
       clearInterval(keepConnectedTimer);
       silentAudio.pause();
